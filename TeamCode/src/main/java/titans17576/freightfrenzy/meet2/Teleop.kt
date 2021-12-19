@@ -150,24 +150,7 @@ class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
 
 
             if (op.gamepad2.right_bumper) {
-                intake_servo.position = position_hold_cube
-                outake_left.position = outake_position_left_up
-                outake_right.position = outake_position_left_up
-                delay(100)
-                lift_left.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-                lift_right.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-                lift_left.power = 0.6
-                lift_right.power = 0.6
-                while (!op.stop_signal.is_greenlight() && !lift_limit.isPressed()) {
-                    yield()
-                }
-                lift_left.power = 0.0
-                lift_right.power = 0.0
-                lift_left.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-                lift_right.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-                outake_left.position = outake_position_left_down
-                outake_right.position = outake_position_left_down
-                intake_servo.position = position_neutral
+
             }
 
 

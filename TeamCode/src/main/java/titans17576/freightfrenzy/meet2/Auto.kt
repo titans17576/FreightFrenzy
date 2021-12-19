@@ -6,7 +6,7 @@ import titans17576.ftcrc7573.DeferredAsyncOpMode
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
 
-class Auto(op: AsyncOpMode): DeferredAsyncOpMode {
+abstract class AutoBase(op: AsyncOpMode): DeferredAsyncOpMode {
     val op = op
     val left_front = (op.hardwareMap["left_front"] as DcMotorEx)
     val left_back = op.hardwareMap["left_back"] as DcMotorEx
@@ -32,7 +32,7 @@ class Auto(op: AsyncOpMode): DeferredAsyncOpMode {
         right_back.direction = DcMotorSimple.Direction.REVERSE
 
         lift_right.direction = DcMotorSimple.Direction.FORWARD
-        outake_left.direction =  Servo.Direction.REVERSE
+        outake_left.direction = Servo.Direction.REVERSE
 
         left_front.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         left_back.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
@@ -114,11 +114,76 @@ class Auto(op: AsyncOpMode): DeferredAsyncOpMode {
         delay(250)
     }
 
+    val outake_position_left_down: Double = 0.0
+    val outake_position_left_up: Double = 0.34
+    val outake_position_left_go: Double = 0.57
+    val outtake_position_left_horizontal: Double = 0.67
+    val position_hold_cube: Double = 0.47
+    val position_hold_ball: Double = 0.43
+    val position_let_go: Double = 0.25
+    val position_neutral: Double = 0.33
+    val lift_lvl1 = 0;
+    val lift_lvl2 = -400;
+    val lift_lvl3 = -750;
+
+    suspend fun reset_outtake() {
+        intake_servo.position = position_hold_cube
+        outake_left.position = outake_position_left_up
+        outake_right.position = outake_position_left_up
+        delay(100)
+        lift_left.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        lift_right.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        lift_left.power = 0.6
+        lift_right.power = 0.6
+        while (!op.stop_signal.is_greenlight() && !lift_limit.isPressed()) {
+            yield()
+        }
+        lift_left.power = 0.0
+        lift_right.power = 0.0
+        lift_left.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        lift_right.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        outake_left.position = outake_position_left_down
+        outake_right.position = outake_position_left_down
+        intake_servo.position = position_neutral
+        delay(250)
+    }
+    suspend fun raise_outtake(ticks: Int) {
+        outake_left.position = outake_position_left_up
+        outake_right.position = outake_position_left_up
+        intake_servo.position = position_hold_cube
+        delay(100)
+        lift_left.targetPosition = ticks;
+        lift_right.targetPosition = ticks;
+        lift_left.mode = DcMotor.RunMode.RUN_TO_POSITION;
+        lift_right.mode = DcMotor.RunMode.RUN_TO_POSITION;
+        lift_left.power = -0.5;
+        lift_right.power = -0.5;
+        while (!op.stop_signal.is_greenlight() && lift_left.currentPosition - 10 > lift_left.targetPosition && !op.gamepad2.left_bumper) {
+            yield()
+            op.telemetry.addData("Cool", lift_left.currentPosition)
+
+        }
+        outake_left.position = outake_position_left_go
+        outake_right.position = outake_position_left_go
+        delay(250)
+    }
+    suspend fun raise_outtake_lvl_1() { raise_outtake(lift_lvl1) }
+    suspend fun raise_outtake_lvl_2() { raise_outtake(lift_lvl2) }
+    suspend fun raise_outtake_lvl_3() { raise_outtake(lift_lvl3) }
+    suspend fun outtake() {
+        intake_servo.position = position_let_go
+        delay(500)
+    }
+}
+
+public class AutoNoCarouselRed(op: AsyncOpMode) : AutoBase(op) {
     override suspend fun op_mode() {
         op.start_signal.await()
         drive(-500, 0.2)
         turn(250,0.2)
         drive(-500, 0.2)
-
+        raise_outtake_lvl_3()
+        outtake()
+        reset_outtake()
     }
 }

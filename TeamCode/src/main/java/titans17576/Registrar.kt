@@ -26,7 +26,7 @@ fun op_modes_other() {
 
 fun freight_frenzy_meet_2() {
     register_defered_async_opmode("/17576/LM2/Teleop", false, titans17576.freightfrenzy.meet2.Teleop::class as KClass<DeferredAsyncOpMode>)
-    register_defered_async_opmode("/17576/LM2/Auto/Red", true, titans17576.freightfrenzy.meet2.Auto::class as KClass<DeferredAsyncOpMode>)
+    register_defered_async_opmode("/17576/LM2/Auto/Red", true, titans17576.freightfrenzy.meet2.AutoNoCarouselRed::class as KClass<DeferredAsyncOpMode>)
     //register_opmode("/17576/LM2/SimpleParkCenter", true, titans17576.freightfrenzy.meet2.SimpleParkCenter())
     //register_opmode("/17576/LM2/SimpleParkWall", true, titans17576.freightfrenzy.meet2.SimpleParkWall())
 }
