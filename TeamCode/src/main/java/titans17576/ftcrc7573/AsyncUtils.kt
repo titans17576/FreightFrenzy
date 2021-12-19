@@ -1,6 +1,5 @@
 package titans17576.ftcrc7573
 
-import acmerobotics.roadrunner.quickstart.trajectorysequence.TrajectorySequence
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
@@ -166,7 +165,7 @@ suspend fun open_opencv_camera(camera: OpenCvCamera) {
     }
 }
 
-interface Trajectoryable {
+/*interface Trajectoryable {
     fun followTrajectorySequenceAsync(trajectorySeq: TrajectorySequence)
     fun isBusy(): Boolean
     fun update()
@@ -178,3 +177,4 @@ suspend fun follow_trajectory(trajectorySeq: TrajectorySequence, drive: Trajecto
         yield()
     }
 }
+ */

@@ -15,7 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import acmerobotics.roadrunner.quickstart.trajectorysequence.TrajectorySequence;
+/*import acmerobotics.roadrunner.quickstart.trajectorysequence.TrajectorySequence;
 import acmerobotics.roadrunner.quickstart.trajectorysequence.TrajectorySequenceBuilder
 
 open class PathBuilder7573(initial_pose: Pose2d, vel_constraint: TrajectoryVelocityConstraint, accel_constraint: TrajectoryAccelerationConstraint, max_vel: Double, max_acc: Double) {
@@ -44,3 +44,4 @@ open class PathBuilder7573(initial_pose: Pose2d, vel_constraint: TrajectoryVeloc
         return new TrajectoryBuilder(last_builder().build(), last_builder().build().duration(), constraints);
     }*/
 }
+*/
