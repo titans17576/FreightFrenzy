@@ -22,7 +22,7 @@ class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
     val outake_left = op.hardwareMap["outtake_left"] as Servo
     val outake_right = op.hardwareMap["outtake_right"] as Servo
     val intake_servo = op.hardwareMap["clamp"] as Servo
-    val lock_servo = op.hardwareMap["intake_hard_stop"] as Servo
+    val lock_servo = op.hardwareMap["intake_clamp"] as Servo
 
     val lift_limit = op.hardwareMap["lift_limit"] as TouchSensor
 
@@ -69,7 +69,7 @@ class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
             var turn = op.gamepad1.right_stick_x.toDouble()
             drive *= Math.abs(drive)
             turn *= Math.abs(turn)
-            val slow = if (op.gamepad1.right_bumper) 0.25 else 0.8;
+            val slow = if (op.gamepad1.right_bumper) 0.25 else if (op.gamepad1.left_bumper) 1.0 else  0.8;
 
             //POV drive (not tank)
             left_back.power = (drive + turn) * slow
@@ -90,8 +90,8 @@ class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
     val position_let_go: Double = 0.25
     val position_neutral: Double = 0.33
     suspend fun peripherals_subsystem() {
-        val lock_pos_locked: Double = 0.8
-        val lock_pos_go: Double = 0.6
+        val lock_pos_locked: Double = 0.19
+        val lock_pos_go: Double = 0.36
         lock_servo.position = lock_pos_locked
 
         op.start_signal.await()
@@ -103,16 +103,17 @@ class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
             intake_power = 0.0
             intake_power += op.gamepad1.right_trigger
             intake_power -= op.gamepad1.left_trigger
-            intake_power += op.gamepad2.right_trigger
-            intake_power -= op.gamepad2.left_trigger
+            //intake_power += op.gamepad2.right_trigger
+            //intake_power -= op.gamepad2.left_trigger
             intake.power = intake_power
 
             //Carousel Servo
-            if (op.gamepad2.a) {
+            /*if (op.gamepad2.a) {
                 if (op.gamepad2.left_bumper || op.gamepad1.a) carousel.power = -1.0
                 else carousel.power = 1.0
             }
-            else carousel.power = 0.0
+            else carousel.power = 0.0*/
+            carousel.power = (op.gamepad2.left_trigger - op.gamepad2.right_trigger).toDouble()
 
 
             if (op.gamepad2.dpad_down) intake_servo.position = position_hold_cube
@@ -150,7 +151,24 @@ class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
 
 
             if (op.gamepad2.right_bumper) {
-
+                intake_servo.position = position_hold_cube
+                outake_left.position = outake_position_left_up
+                outake_right.position = outake_position_left_up
+                delay(100)
+                lift_left.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+                lift_right.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+                lift_left.power = 0.6
+                lift_right.power = 0.6
+                while (!op.stop_signal.is_greenlight() && !lift_limit.isPressed()) {
+                    yield()
+                }
+                lift_left.power = 0.0
+                lift_right.power = 0.0
+                lift_left.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+                lift_right.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+                outake_left.position = outake_position_left_down
+                outake_right.position = outake_position_left_down
+                intake_servo.position = position_neutral
             }
 
 

@@ -48,16 +48,22 @@ import org.firstinspires.ftc.teamcode.util.LynxModuleUtil;
 import java.util.Arrays;
 import java.util.List;
 
+import titans17576.ftcrc7573.Trajectoryable;
+
 /*
  * Simple tank drive hardware implementation for REV hardware.
  */
 @Config
-public class Meet2Drive extends TankDrive {
+public class Meet2Drive extends TankDrive implements Trajectoryable {
     //public static PIDCoefficients AXIAL_PID = new PIDCoefficients(5, 0, 0.1);
     //public static PIDCoefficients CROSS_TRACK_PID = new PIDCoefficients(0, 0, 0);
     public static double B = 15.0 * 0.0254 * 0.0254;
-    public static double ZETA = 0.75;
+    public static double ZETA = 2.0;
     public static PIDCoefficients HEADING_PID = new PIDCoefficients(0, 0, 0);
+    public static double ACCEPTABLE_ERROR_X = 0.5;
+    public static double ACCEPTABLE_ERROR_Y = 0.5;
+    public static double ACCEPTABLE_ERROR_RAD = Math.toRadians(5.0);
+    public static double FOLLOWER_TIMEOUT = 0.5;
 
     public DcMotorEx leftFront;
     public DcMotorEx leftRear;
@@ -82,9 +88,10 @@ public class Meet2Drive extends TankDrive {
     public Meet2Drive(HardwareMap hardwareMap) {
         super(kV, kA, kStatic, TRACK_WIDTH);
 
+        Pose2d acceptable_error = new Pose2d(ACCEPTABLE_ERROR_X, ACCEPTABLE_ERROR_Y, ACCEPTABLE_ERROR_RAD);
         //follower = new TankPIDVAFollower7573(AXIAL_PID, CROSS_TRACK_PID,
-        //        new Pose2d(0.5, 0.5, Math.toRadians(5.0)), 0.5);
-        follower = new RamseteFollower(B, ZETA, new Pose2d(0.5, 0.5, Math.toRadians(5.0)), 0.5);
+        //        acceptable_error, FOLLOWER_TIMEOUT);
+        follower = new RamseteFollower(B, ZETA, acceptable_error, FOLLOWER_TIMEOUT);
 
         LynxModuleUtil.ensureMinimumFirmwareVersion(hardwareMap);
 

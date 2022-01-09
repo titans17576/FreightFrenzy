@@ -5,6 +5,7 @@ import titans17576.ftcrc7573.AsyncOpMode
 import titans17576.ftcrc7573.DeferredAsyncOpMode
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
+import org.firstinspires.ftc.teamcode.drive.DriveConstants
 
 abstract class AutoBase(op: AsyncOpMode): DeferredAsyncOpMode {
     val op = op
@@ -185,5 +186,57 @@ public class AutoNoCarouselRed(op: AsyncOpMode) : AutoBase(op) {
         raise_outtake_lvl_3()
         outtake()
         reset_outtake()
+    }
+}
+
+public class AutoCarouselBlue(op: AsyncOpMode) : AutoBase(op) {
+    override suspend fun op_mode() {
+        op.start_signal.await()
+        drive(DriveConstants.inchesToTicks(8.0), 0.4)
+        carousel.power = 1.0
+        delay(5000)
+        carousel.power = 0.0
+        drive(DriveConstants.inchesToTicks(-24.0 * 1.5), 0.4)
+        turn(250, 0.4)
+        drive(DriveConstants.inchesToTicks(-24.0 * 2.5), 0.4)
+    }
+}
+
+public class ParkCloseBlue(op: AsyncOpMode): AutoBase(op) {
+    override suspend fun op_mode() {
+        op.start_signal.await()
+        drive(DriveConstants.inchesToTicks(24.0 * 0.75), 0.4)
+        turn(-500, 0.4)
+        drive(DriveConstants.inchesToTicks(24.0 * 2), 0.8)
+    }
+}
+public class ParkFarBlue(op: AsyncOpMode): AutoBase(op) {
+    override suspend fun op_mode() {
+        op.start_signal.await()
+        drive(DriveConstants.inchesToTicks(24.0), 0.4)
+        turn(500, 0.4)
+        drive(DriveConstants.inchesToTicks(24.0), 0.4)
+    }
+}
+public class ParkFarRed(op: AsyncOpMode): AutoBase(op) {
+    override suspend fun op_mode() {
+        op.start_signal.await()
+        drive(DriveConstants.inchesToTicks(24.0), 0.4)
+        turn(-500, 0.4)
+        drive(DriveConstants.inchesToTicks(24.0), 0.4)
+    }
+}
+public class ParkCloseRed(op: AsyncOpMode): AutoBase(op) {
+    override suspend fun op_mode() {
+        op.start_signal.await()
+        drive(DriveConstants.inchesToTicks(24.0 * 0.75), 0.4)
+        turn(500, 0.4)
+        drive(DriveConstants.inchesToTicks(24.0 * 2), 0.8)
+    }
+}
+public class DriveForawardAuto(op: AsyncOpMode) : AutoBase(op) {
+    override suspend fun op_mode() {
+        op.start_signal.await()
+        drive(DriveConstants.inchesToTicks(24.0 * 3), 0.8);
     }
 }

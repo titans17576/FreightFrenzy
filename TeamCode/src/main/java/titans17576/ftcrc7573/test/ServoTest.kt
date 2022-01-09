@@ -83,20 +83,20 @@ class TouchTest(op: AsyncOpMode) : DeferredAsyncOpMode {
 
 class DoubleServoTest(op: AsyncOpMode) : DeferredAsyncOpMode {
     val op = op
-    var servoright = op.hardwareMap["outtake_right"] as Servo
-    var servoleft = op.hardwareMap["outtake_left"] as Servo
+    var servoright = op.hardwareMap["intake_clamp"] as Servo
+    //var servoleft = op.hardwareMap["outtake_left"] as Servo
     var position = 0.0
     override suspend fun op_mode() {
         //op.launch { servo_switcher() }
         //op.launch { servo_direction_change(op.gamepad1) }
-        servoleft.direction = Servo.Direction.REVERSE
+        //servoleft.direction = Servo.Direction.REVERSE
 
         op.start_signal.await()
         op.while_live {
             if (op.gamepad1.dpad_up) position += 0.01
             if (op.gamepad1.dpad_down) position -= 0.01
             servoright!!.position = position
-            servoleft!!.position = position
+            //servoleft!!.position = position
             op.telemetry.addData("Servo Value: ", position)
             op.telemetry.update()
             delay(100)

@@ -2,11 +2,9 @@ package titans17576
 
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManager
 import com.qualcomm.robotcore.eventloop.opmode.OpModeRegistrar
-import com.qualcomm.robotcore.hardware.HardwareMap
 import titans17576.ftcrc7573.DeferredAsyncOpMode
 import titans17576.ftcrc7573.current_op_mode_manager
 import titans17576.ftcrc7573.register_defered_async_opmode
-import titans17576.ftcrc7573.register_opmode
 import kotlin.reflect.KClass
 
 @OpModeRegistrar
@@ -18,6 +16,7 @@ fun generated_op_mode_registrar(m: OpModeManager) {
 
 fun op_modes_current() {
     freight_frenzy_meet_2()
+    register_defered_async_opmode("/7573/ChristianAutoTest", true, org.firstinspires.ftc.teamcode.ChristianAutoTest::class as KClass<DeferredAsyncOpMode>)
 }
 fun op_modes_other() {
     freight_frenzy_meet_1()
@@ -26,7 +25,13 @@ fun op_modes_other() {
 
 fun freight_frenzy_meet_2() {
     register_defered_async_opmode("/17576/LM2/Teleop", false, titans17576.freightfrenzy.meet2.Teleop::class as KClass<DeferredAsyncOpMode>)
-    register_defered_async_opmode("/17576/LM2/Auto/Red", true, titans17576.freightfrenzy.meet2.AutoNoCarouselRed::class as KClass<DeferredAsyncOpMode>)
+    //register_defered_async_opmode("/17576/LM2/Auto/Red", true, titans17576.freightfrenzy.meet2.AutoNoCarouselRed::class as KClass<DeferredAsyncOpMode>)
+    register_defered_async_opmode("/17576/LM2/CarousselAuto/Blue", true, titans17576.freightfrenzy.meet2.AutoCarouselBlue::class as KClass<DeferredAsyncOpMode>)
+    register_defered_async_opmode("/17576/LM2/ParkAutoClose/Blue", true, titans17576.freightfrenzy.meet2.ParkCloseBlue::class as KClass<DeferredAsyncOpMode>)
+    register_defered_async_opmode("/17576/LM2/ParkAutoFar/Blue", true, titans17576.freightfrenzy.meet2.ParkFarBlue::class as KClass<DeferredAsyncOpMode>)
+    register_defered_async_opmode("/17576/LM2/ParkAutoClose/Red", true, titans17576.freightfrenzy.meet2.ParkCloseRed::class as KClass<DeferredAsyncOpMode>)
+    register_defered_async_opmode("/17576/LM2/ParkAutoFar/Red", true, titans17576.freightfrenzy.meet2.ParkFarRed::class as KClass<DeferredAsyncOpMode>)
+    register_defered_async_opmode("/17576/LM2/DriveForwardAuto", true, titans17576.freightfrenzy.meet2.DriveForawardAuto::class as KClass<DeferredAsyncOpMode>)
     //register_opmode("/17576/LM2/SimpleParkCenter", true, titans17576.freightfrenzy.meet2.SimpleParkCenter())
     //register_opmode("/17576/LM2/SimpleParkWall", true, titans17576.freightfrenzy.meet2.SimpleParkWall())
 }

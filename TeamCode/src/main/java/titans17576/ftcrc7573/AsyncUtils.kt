@@ -5,6 +5,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.yield
+import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence
 import org.openftc.easyopencv.OpenCvCamera
 import java.lang.Exception
 import java.lang.RuntimeException
@@ -165,7 +166,7 @@ suspend fun open_opencv_camera(camera: OpenCvCamera) {
     }
 }
 
-/*interface Trajectoryable {
+interface Trajectoryable {
     fun followTrajectorySequenceAsync(trajectorySeq: TrajectorySequence)
     fun isBusy(): Boolean
     fun update()
@@ -177,4 +178,3 @@ suspend fun follow_trajectory(trajectorySeq: TrajectorySequence, drive: Trajecto
         yield()
     }
 }
- */
