@@ -57,13 +57,13 @@ import titans17576.ftcrc7573.Trajectoryable;
 public class Meet2Drive extends TankDrive implements Trajectoryable {
     //public static PIDCoefficients AXIAL_PID = new PIDCoefficients(5, 0, 0.1);
     //public static PIDCoefficients CROSS_TRACK_PID = new PIDCoefficients(0, 0, 0);
-    public static double B = 15.0 * 0.0254 * 0.0254;
+    public static double B = 0.05; //15.0 * 0.0254 * 0.0254;
     public static double ZETA = 2.0;
     public static PIDCoefficients HEADING_PID = new PIDCoefficients(0, 0, 0);
-    public static double ACCEPTABLE_ERROR_X = 0.5;
-    public static double ACCEPTABLE_ERROR_Y = 0.5;
+    public static double ACCEPTABLE_ERROR_X = 0.25;
+    public static double ACCEPTABLE_ERROR_Y = 0.25;
     public static double ACCEPTABLE_ERROR_RAD = Math.toRadians(5.0);
-    public static double FOLLOWER_TIMEOUT = 0.5;
+    public static double FOLLOWER_TIMEOUT = 0.1;
 
     public DcMotorEx leftFront;
     public DcMotorEx leftRear;
