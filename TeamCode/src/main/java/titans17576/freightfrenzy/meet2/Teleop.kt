@@ -157,8 +157,8 @@ class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
                 delay(100)
                 lift_left.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
                 lift_right.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-                lift_left.power = 0.6
-                lift_right.power = 0.6
+                lift_left.power = 1.0
+                lift_right.power = 1.0
                 while (!op.stop_signal.is_greenlight() && !lift_limit.isPressed()) {
                     yield()
                 }
@@ -208,8 +208,8 @@ class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
         lift_right.targetPosition = level;
         lift_left.mode = DcMotor.RunMode.RUN_TO_POSITION;
         lift_right.mode = DcMotor.RunMode.RUN_TO_POSITION;
-        lift_left.power = -0.5;
-        lift_right.power = -0.5;
+        lift_left.power = -1.0;
+        lift_right.power = -1.0;
         while (!op.stop_signal.is_greenlight() && lift_left.currentPosition - 10 > lift_left.targetPosition && !op.gamepad2.left_bumper) {
             yield()
             op.telemetry.addData("Cool", lift_left.currentPosition)

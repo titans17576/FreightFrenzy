@@ -12,7 +12,9 @@ class ChristianAutoTest(op: AsyncOpMode) : DeferredAsyncOpMode {
         val bot = Meet2Drive(op.hardwareMap)
         val path = NoCarouselAutoPath(true, bot.trajectory_builder_factory())
         bot.poseEstimate = path.initial_pose
-        for (traj in path.trajectories) follow_trajectory(traj, bot, op)
+        for (traj in path.trajectories) {
+            follow_trajectory(traj, bot, op)
+        }
     }
 }
 

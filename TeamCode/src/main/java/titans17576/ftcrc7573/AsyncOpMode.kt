@@ -4,12 +4,14 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManager
 import kotlinx.coroutines.*
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta
+import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.reflect.KClass
+import kotlin.reflect.jvm.javaType
 
 var RUNNING_OP: AsyncOpMode? = null;
 
@@ -29,12 +31,15 @@ public abstract class AsyncOpMode : OpMode() {
 
 
     override fun init() {
-        dispatcher = AsyncOpModeDispatcher()
+        dispatcher = AsyncOpModeDispatcher(this)
         async_scope = CoroutineScope(EmptyCoroutineContext + dispatcher)
         start_signal = Signal()
         stop_signal = Signal()
         RUNNING_OP = this
-        launch { op_mode() }
+        launch {
+            yield()
+            op_mode()
+        }
         dispatcher.execute()
         telemetry.update()
     }
@@ -70,15 +75,19 @@ public abstract class AsyncOpMode : OpMode() {
     }
 }
 
-private class AsyncOpModeDispatcher : CoroutineDispatcher() {
+private class AsyncOpModeDispatcher(op: AsyncOpMode) : CoroutineDispatcher() {
     val dispatches = LinkedBlockingQueue<Runnable>()
     var error: Throwable? = null
+    val op = op
     //val dispatches_unimportant = LinkedList<Runnable>()
 
     fun execute() {
+        println("Begin execute")
         if (error != null) {
+            op.telemetry.addData("Error", error.toString())
             dispatches.clear()
-            throw error!!
+            //op.requestOpModeStop()
+            return
         }
 
         //println("Begin dispatcher exec")
@@ -89,10 +98,13 @@ private class AsyncOpModeDispatcher : CoroutineDispatcher() {
             } catch(e: Throwable) {
                 dispatches.clear()
                 error = e
+                op.telemetry.addData("Error", e.toString())
+                System.out.println("Alador!")
                 System.out.println("==========================")
                 System.out.println(e)
                 System.out.println("==========================")
-                throw e
+                op.requestOpModeStop()
+                return
             }
         }
         //println("End dispatcher exec")
@@ -130,10 +142,28 @@ fun register_opmode(name: String, is_autonomous: Boolean, type: OpMode) {
         type
     );
 }
-fun register_defered_async_opmode(name: String, is_autonomous: Boolean, type: KClass<DeferredAsyncOpMode>) {
+fun<T: DeferredAsyncOpMode> register_defered_async_opmode(name: String, is_autonomous: Boolean, type: KClass<T>) {
     class DeferredAsyncOpModeHolder : AsyncOpMode() {
         override suspend fun op_mode() {
-            type.constructors.iterator().next().call(this).op_mode()
+            val yes = (type.constructors.iterator().next().call(this))
+            yes.op_mode()
+        }
+    }
+    println(type.constructors.iterator().next().parameters[0].type.javaType == AsyncOpMode::class.javaObjectType)
+    println("Sir alador!")
+    current_op_mode_manager!!.register(OpModeMeta.Builder()
+        .setName(name)
+        .setFlavor(if (is_autonomous) OpModeMeta.Flavor.AUTONOMOUS else OpModeMeta.Flavor.TELEOP)
+        .setSource(OpModeMeta.Source.ANDROID_STUDIO)
+        .build(),
+        DeferredAsyncOpModeHolder()
+    )
+}
+fun register_defered_async_opmode_via_factory(name: String, is_autonomous: Boolean, factory: (op: AsyncOpMode) -> DeferredAsyncOpMode) {
+    class DeferredAsyncOpModeHolder : AsyncOpMode() {
+        override suspend fun op_mode() {
+            val yes = factory(this)
+            yes.op_mode()
         }
     }
     current_op_mode_manager!!.register(OpModeMeta.Builder()

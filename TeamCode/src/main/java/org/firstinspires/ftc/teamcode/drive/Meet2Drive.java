@@ -294,7 +294,10 @@ public class Meet2Drive extends TankDrive implements Trajectoryable {
     }
 
     @Override
-    public void setMotorPowers(double v, double v1) {
+    public void setMotorPowers(double mv, double mv1) {
+        final double power_cap = 0.75;
+        double v = Math.min(Math.max(mv, -1.0), 1.0) * power_cap;
+        double v1 = Math.min(Math.max(mv1, -1.0), 1.0) * power_cap;
         for (DcMotorEx leftMotor : leftMotors) {
             leftMotor.setPower(v);
         }
