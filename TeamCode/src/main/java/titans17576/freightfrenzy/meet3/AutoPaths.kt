@@ -4,7 +4,7 @@ import com.acmerobotics.roadrunner.geometry.Pose2d
 import com.acmerobotics.roadrunner.geometry.Vector2d
 import titans17576.ftcrc7573.*
 
-class Path_StartCarousel_Vision_Carousel_Depo(is_red: Boolean, factory: TrajectoryBuilderFactory)
+class NoCarouselAutoPath(is_red: Boolean, factory: TrajectoryBuilderFactory)
     : PathBuilder7573(Pose2d(-28.0, -63.0 * (if (is_red) 1.0 else -1.0), 90.0.toRadians * (if (is_red) 1.0 else -1.0)), factory) {
     val side = if (is_red) 1.0 else -1.0
 

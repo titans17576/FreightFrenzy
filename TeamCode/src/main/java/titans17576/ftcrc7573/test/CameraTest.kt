@@ -9,10 +9,11 @@ class CameraTest(op: AsyncOpMode) : DeferredAsyncOpMode {
     val op = op
     override suspend fun op_mode() {
         val feed = camera_init(op)
-        op.start_signal.await()
-        op.while_live {
-            op.telemetry.addData("Location", feed.get_now())
+        op.launch {
+            op.while_live {
+                op.telemetry.addData("Location", feed.get_next(this))
+            }
         }
+        op.stop_signal.await()
     }
-
 }

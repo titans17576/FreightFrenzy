@@ -33,7 +33,7 @@ suspend fun camera_init(op: AsyncOpMode): FeedListener<Barcode> {
     //open camera
     open_opencv_camera(camera)
     //set resolution and start streaming
-    camera.startStreaming(640,480, OpenCvCameraRotation.SIDEWAYS_LEFT)
+    camera.startStreaming(640,480, OpenCvCameraRotation.UPRIGHT)
     //use GPU acceleration for faster render time
     camera.setViewportRenderer(OpenCvCamera.ViewportRenderer.GPU_ACCELERATED)
     camera.setPipeline(TeamShippingElementPipeline(marker_pos, op))
@@ -113,21 +113,15 @@ class TeamShippingElementPipeline(barcode: FeedSource<Barcode>, op: AsyncOpMode)
          * height = maxWidth >= MIN_WIDTH ? aspectRatio > BOUND_RATIO ? FOUR : ONE : ZERO
          **/
         val inputWidth = input!!.size().width
+        val center_threshold = (inputWidth * 0.1).toInt()
+        val right_threshold = (inputWidth * 0.5).toInt()
+        val barcode_pos = if (maxRect.width * maxRect.height > input!!.size().height * 0.2)
+            when (maxRect.x) {
+                in right_threshold..Int.MAX_VALUE -> Barcode.Right
+                in center_threshold..right_threshold -> Barcode.Center
+                else -> Barcode.Left
+            } else Barcode.Left
         op.launch {
-            val barcode_pos: Barcode
-            val third_width = inputWidth / 3
-            val left_third_coord = 0 + third_width
-            val center_third_coord = left_third_coord + third_width
-
-            /** checks if aspectRatio is greater than BOUND_RATIO
-             * to determine whether stack is ONE or FOUR
-             */
-            if (maxRect.x < left_third_coord)
-                barcode_pos = Barcode.Left // height variable is now FOUR
-            else if (maxRect.x < center_third_coord)
-                barcode_pos = Barcode.Center // height variable is now ONE
-            else
-                barcode_pos = Barcode.Right // height variable is now ZERO
             barcode.update(barcode_pos)
         }
 

@@ -15,9 +15,14 @@ fun generated_op_mode_registrar(m: OpModeManager) {
     op_modes_other()
 }
 
+fun freight_frenzy_meet_3() {
+    register_defered_async_opmode("/17576/LM3/Teleop", false) { op -> titans17576.freightfrenzy.meet2.Teleop(op) }
+    register_defered_async_opmode("/17576/LM3/Red/Carousel/Vision-Carousel-Park", true) { op -> titans17576.freightfrenzy.meet3.Auto_StartCarousel_Vision_Carousel_Depo(true, op) }
+    register_defered_async_opmode("/17576/LM3/Blue/Carousel/Vision-Carousel-Park", true) { op -> titans17576.freightfrenzy.meet3.Auto_StartCarousel_Vision_Carousel_Depo(false, op) }
+}
+
 fun op_modes_current() {
     freight_frenzy_meet_2()
-    register_defered_async_opmode_legacy("/7573/ChristianAutoTest", true, org.firstinspires.ftc.teamcode.ChristianAutoTest::class as KClass<DeferredAsyncOpMode>)
     register_defered_async_opmode("/7573/CameraTest", false) { op -> titans17576.ftcrc7573.test.CameraTest(op) }
 }
 fun op_modes_other() {
