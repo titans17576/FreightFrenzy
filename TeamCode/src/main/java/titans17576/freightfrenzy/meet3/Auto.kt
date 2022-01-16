@@ -73,3 +73,36 @@ class Auto_StartCarousel_Vision_Carousel_Depo(is_red: Boolean, op: AsyncOpMode) 
         delay(30000)
     }
 }
+
+class Auto_StartWarehouse_Vision_Depo(is_red: Boolean, op: AsyncOpMode) : AutoBase(op) {
+    val is_red = is_red
+
+    override suspend fun op_mode() {
+        val bot = Meet2Drive(op.hardwareMap)
+        val path = Path_StartWarehouse_Vision_Park(is_red, bot.trajectory_builder_factory())
+        bot.poseEstimate = path.initial_pose
+        val outtake = OuttakeController(op, false)
+
+        val barcode_eventually = op.async { get_grasshopper_location(op, this) }
+        op.start_signal.await()
+        val barcode = barcode_eventually.await()
+        outtake.intake_servo.position = CLAMP_POS_HOLD_CUBE
+        op.launch { op.while_live { op.telemetry.addData("Barcode", barcode) } }
+        delay(500)
+
+        //Drive to team shipping hub
+        follow_trajectory_sequence(path.trajectories.poll()!!, bot, op)
+        //Deploy into shipping hub
+        outtake.outtake_arm_go(calc_lift_height(barcode), OUTTAKE_POSITION_OUTSIDE)
+        delay(500)
+        outtake.intake_servo.position = CLAMP_POS_RELEASE
+        delay(2000)
+        outtake.outtake_reset()
+        delay(500)
+
+        //Park
+        follow_trajectory_sequence(path.trajectories.poll()!!, bot, op)
+
+        delay(30000)
+    }
+}
