@@ -37,7 +37,7 @@ suspend fun camera_init(op: AsyncOpMode): FeedListener<Barcode> {
     //use GPU acceleration for faster render time
     camera.setViewportRenderer(OpenCvCamera.ViewportRenderer.GPU_ACCELERATED)
     camera.setPipeline(TeamShippingElementPipeline(marker_pos, op))
-    FtcDashboard.getInstance().startCameraStream(camera, 10.0)
+    //FtcDashboard.getInstance().startCameraStream(camera, 10.0)
 
     camera_map.put(op, camera)
     return marker_pos.fork()
@@ -57,6 +57,7 @@ class TeamShippingElementPipeline(barcode: FeedSource<Barcode>, op: AsyncOpMode)
     val color: Scalar = Scalar(0.0, 0.0, 255.0)
     val placeholder: Mat = Mat()
     val hsv: Mat = Mat()
+    var count7573 = 0
 
     var maxRect: Rect = Rect()
 
@@ -113,9 +114,9 @@ class TeamShippingElementPipeline(barcode: FeedSource<Barcode>, op: AsyncOpMode)
          * height = maxWidth >= MIN_WIDTH ? aspectRatio > BOUND_RATIO ? FOUR : ONE : ZERO
          **/
         val inputWidth = input!!.size().width
-        val center_threshold = (inputWidth * 0.1).toInt()
+        val center_threshold = (inputWidth * 0.01).toInt()
         val right_threshold = (inputWidth * 0.5).toInt()
-        val barcode_pos = if (maxRect.width * maxRect.height > input!!.size().height * 0.2)
+        val barcode_pos = if (maxRect.width * maxRect.height > input!!.size().height * 0.1)
             when (maxRect.x) {
                 in right_threshold..Int.MAX_VALUE -> Barcode.Right
                 in center_threshold..right_threshold -> Barcode.Center
@@ -129,6 +130,10 @@ class TeamShippingElementPipeline(barcode: FeedSource<Barcode>, op: AsyncOpMode)
         hsv.release()
         dst.release()
         placeholder.release()
+
+        op.telemetry.addData("Vision count", count7573)
+        count7573++
+        op.telemetry.addData("Barcode", barcode_pos)
 
         return img_copy
     }

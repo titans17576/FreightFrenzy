@@ -1,6 +1,7 @@
 package titans17576.freightfrenzy.meet3
 
 import com.qualcomm.robotcore.hardware.CRServo
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import titans17576.ftcrc7573.AsyncOpMode
 import titans17576.ftcrc7573.DeferredAsyncOpMode
@@ -9,11 +10,11 @@ import titans17576.freightfrenzy.meet2.*
 import titans17576.ftcrc7573.follow_trajectory_sequence
 import titans17576.ftcrc7573.trajectory_builder_factory
 
-suspend fun get_grasshopper_location(op: AsyncOpMode): Barcode {
+suspend fun get_grasshopper_location(op: AsyncOpMode, scope: CoroutineScope): Barcode {
     val feed = camera_init(op)
     try {
         op.start_signal.await()
-        return feed.get_now()
+        return feed.get_next(scope)
     } finally {
         camera_disable(op)
     }
@@ -42,15 +43,22 @@ class Auto_StartCarousel_Vision_Carousel_Depo(is_red: Boolean, op: AsyncOpMode) 
         bot.poseEstimate = path.initial_pose
         val outtake = OuttakeController(op, false)
 
-        val barcode_eventually = op.async { get_grasshopper_location(op) }
+        val barcode_eventually = op.async { get_grasshopper_location(op, this) }
         op.start_signal.await()
         val barcode = barcode_eventually.await()
+        outtake.intake_servo.position = CLAMP_POS_HOLD_CUBE
+        op.launch { op.while_live { op.telemetry.addData("Barcode", barcode) } }
+        delay(2000)
 
         //Drive to team shipping hub
         follow_trajectory_sequence(path.trajectories.poll()!!, bot, op)
         //Deploy into shipping hub
         outtake.outtake_arm_go(calc_lift_height(barcode), OUTTAKE_POSITION_OUTSIDE)
-        delay(1000)
+        delay(500)
+        outtake.intake_servo.position = CLAMP_POS_RELEASE
+        delay(2000)
+        outtake.outtake_reset()
+        delay(500)
 
         //Drive to carousel
         follow_trajectory_sequence(path.trajectories.poll()!!, bot, op)

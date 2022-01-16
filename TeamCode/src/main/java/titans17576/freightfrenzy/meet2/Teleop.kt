@@ -18,7 +18,7 @@ val lift_lvl2 = -400;
 val lift_lvl3 = -750;
 
 //Outtake arm positions
-val OUTTAKE_POSITION_INSIDE: Double = 0.0
+val OUTTAKE_POSITION_INSIDE: Double = 0.01
 val OUTTAKE_POSITION_VERTICAL: Double = 0.34
 val OUTTAKE_POSITION_OUTSIDE: Double = 0.57
 val OUTTAKE_POSITION_OUTSIDE_HORIZONTAL: Double = 0.67
@@ -154,6 +154,7 @@ class OuttakeController(op: AsyncOpMode, manual_controls_enabled: Boolean) {
 
     init {
         lift_right.direction = DcMotorSimple.Direction.FORWARD
+        lift_left.direction = DcMotorSimple.Direction.REVERSE
         outake_left.direction =  Servo.Direction.REVERSE
     }
 

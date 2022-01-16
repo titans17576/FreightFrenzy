@@ -22,7 +22,7 @@ fun freight_frenzy_meet_3() {
 }
 
 fun op_modes_current() {
-    freight_frenzy_meet_2()
+    freight_frenzy_meet_3()
     register_defered_async_opmode("/7573/CameraTest", false) { op -> titans17576.ftcrc7573.test.CameraTest(op) }
 }
 fun op_modes_other() {

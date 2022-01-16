@@ -28,6 +28,7 @@ public abstract class AsyncOpMode : OpMode() {
     fun<R> async(task: suspend CoroutineScope.() -> R): Deferred<R> {
         return async_scope.async(block = task)
     }
+    fun mk_scope(): CoroutineScope = async_scope
 
 
     override fun init() {
