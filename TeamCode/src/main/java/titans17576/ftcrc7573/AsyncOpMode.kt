@@ -142,7 +142,7 @@ fun register_opmode(name: String, is_autonomous: Boolean, type: OpMode) {
         type
     );
 }
-fun<T: DeferredAsyncOpMode> register_defered_async_opmode(name: String, is_autonomous: Boolean, type: KClass<T>) {
+fun<T: DeferredAsyncOpMode> register_defered_async_opmode_legacy(name: String, is_autonomous: Boolean, type: KClass<T>) {
     class DeferredAsyncOpModeHolder : AsyncOpMode() {
         override suspend fun op_mode() {
             val yes = (type.constructors.iterator().next().call(this))
@@ -159,7 +159,7 @@ fun<T: DeferredAsyncOpMode> register_defered_async_opmode(name: String, is_auton
         DeferredAsyncOpModeHolder()
     )
 }
-fun register_defered_async_opmode_via_factory(name: String, is_autonomous: Boolean, factory: (op: AsyncOpMode) -> DeferredAsyncOpMode) {
+fun register_defered_async_opmode(name: String, is_autonomous: Boolean, factory: (op: AsyncOpMode) -> DeferredAsyncOpMode) {
     class DeferredAsyncOpModeHolder : AsyncOpMode() {
         override suspend fun op_mode() {
             val yes = factory(this)

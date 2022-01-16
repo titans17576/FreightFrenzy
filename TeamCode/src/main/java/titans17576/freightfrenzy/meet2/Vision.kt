@@ -1,5 +1,6 @@
 package titans17576.freightfrenzy.meet2
 
+import com.acmerobotics.dashboard.FtcDashboard
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName
 import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
@@ -36,6 +37,7 @@ suspend fun camera_init(op: AsyncOpMode): FeedListener<Barcode> {
     //use GPU acceleration for faster render time
     camera.setViewportRenderer(OpenCvCamera.ViewportRenderer.GPU_ACCELERATED)
     camera.setPipeline(TeamShippingElementPipeline(marker_pos, op))
+    FtcDashboard.getInstance().startCameraStream(camera, 10.0)
 
     camera_map.put(op, camera)
     return marker_pos.fork()
@@ -55,15 +57,8 @@ class TeamShippingElementPipeline(barcode: FeedSource<Barcode>, op: AsyncOpMode)
     val color: Scalar = Scalar(0.0, 0.0, 255.0)
     val placeholder: Mat = Mat()
     val hsv: Mat = Mat()
-    var ret: Mat = Mat()
 
     var maxRect: Rect = Rect()
-    val rectWidth
-        get() = maxRect.size().width
-    val rectHeight
-        get() = maxRect.size().height
-    val rectSize
-        get() = maxRect.size()
 
     override fun processFrame(input: Mat?): Mat {
         //extract the red channel from input
@@ -89,7 +84,7 @@ class TeamShippingElementPipeline(barcode: FeedSource<Barcode>, op: AsyncOpMode)
         val contours:List<MatOfPoint> = java.util.ArrayList()
         Imgproc.findContours(dst, contours, placeholder, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE)
         //drawing contours
-        img_copy = input!!.clone()
+        input!!.copyTo(img_copy)
         Imgproc.drawContours(img_copy, contours, -1, color, 2)
 
         //finding contour of actual team shipping element
@@ -110,14 +105,14 @@ class TeamShippingElementPipeline(barcode: FeedSource<Barcode>, op: AsyncOpMode)
         }
 
         /**drawing widest bounding rectangle to ret in blue**/
-        Imgproc.rectangle(ret, maxRect, Scalar(0.0, 0.0, 255.0), 2)
+        Imgproc.rectangle(img_copy, maxRect, Scalar(255.0, 0.0, 0.0), 2)
 
         /** checking if widest width is greater than equal to minimum width
          * using Kotlin if expression (Java ternary) to set height variable
          *
          * height = maxWidth >= MIN_WIDTH ? aspectRatio > BOUND_RATIO ? FOUR : ONE : ZERO
          **/
-        val inputWidth = input.size().width
+        val inputWidth = input!!.size().width
         op.launch {
             val barcode_pos: Barcode
             val third_width = inputWidth / 3

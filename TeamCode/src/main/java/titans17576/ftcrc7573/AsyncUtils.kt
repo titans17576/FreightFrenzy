@@ -171,7 +171,7 @@ interface Trajectoryable {
     fun isBusy(): Boolean
     fun update()
 }
-suspend fun follow_trajectory(trajectorySeq: TrajectorySequence, drive: Trajectoryable, op: AsyncOpMode) {
+suspend fun follow_trajectory_sequence(trajectorySeq: TrajectorySequence, drive: Trajectoryable, op: AsyncOpMode) {
     drive.followTrajectorySequenceAsync(trajectorySeq)
     while (op.start_signal.is_greenlight() && !op.stop_signal.is_greenlight() && drive.isBusy()) {
         drive.update()

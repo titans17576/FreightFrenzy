@@ -5,7 +5,23 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
 import titans17576.ftcrc7573.AsyncOpMode
 import titans17576.ftcrc7573.DeferredAsyncOpMode
-import titans17576.ftcrc7573.MotorReversedEncoder
+
+//Variables for holding the cube
+val CLAMP_POS_HOLD_CUBE: Double = 0.47
+val CLAMP_POS_HOLD_BALL: Double = 0.43
+val CLAMP_POS_RELEASE: Double = 0.25
+val CLAMP_POS_NEUTRAL: Double = 0.33
+
+//Lift heights
+val lift_lvl1 = 0;
+val lift_lvl2 = -400;
+val lift_lvl3 = -750;
+
+//Outtake arm positions
+val OUTTAKE_POSITION_INSIDE: Double = 0.0
+val OUTTAKE_POSITION_VERTICAL: Double = 0.34
+val OUTTAKE_POSITION_OUTSIDE: Double = 0.57
+val OUTTAKE_POSITION_OUTSIDE_HORIZONTAL: Double = 0.67
 
 class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
     val op = op;
@@ -14,26 +30,17 @@ class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
     val right_front = (op.hardwareMap["right_front"] as DcMotorEx)
     val right_back = op.hardwareMap["right_back"] as DcMotorEx
 
-    val lift_left = op.hardwareMap["lift_left"] as DcMotorEx
-    val lift_right = op.hardwareMap["lift_right"] as DcMotorEx
     val intake = op.hardwareMap["intake"] as DcMotorEx
 
     val carousel = op.hardwareMap["carousel"] as CRServo
-    val outake_left = op.hardwareMap["outtake_left"] as Servo
-    val outake_right = op.hardwareMap["outtake_right"] as Servo
     val intake_servo = op.hardwareMap["clamp"] as Servo
     val lock_servo = op.hardwareMap["intake_clamp"] as Servo
-
-    val lift_limit = op.hardwareMap["lift_limit"] as TouchSensor
 
     init {
         left_front.direction = DcMotorSimple.Direction.FORWARD
         left_back.direction = DcMotorSimple.Direction.FORWARD
         right_front.direction = DcMotorSimple.Direction.REVERSE
         right_back.direction = DcMotorSimple.Direction.REVERSE
-
-        lift_right.direction = DcMotorSimple.Direction.FORWARD
-        outake_left.direction =  Servo.Direction.REVERSE
 
         left_front.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         left_back.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
@@ -45,7 +52,7 @@ class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
             drive_subsystem()
         }
         op.launch { peripherals_subsystem() }
-        op.launch { outtake_subsystem() }
+        op.launch { OuttakeController(op, true).teleop_subsystem() }
         op.launch { philip_button_subsystem() }
     }
     suspend fun drive_subsystem(){
@@ -84,11 +91,6 @@ class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
         }
     }
 
-    //Variables for holding the cube
-    val position_hold_cube: Double = 0.47
-    val position_hold_ball: Double = 0.43
-    val position_let_go: Double = 0.25
-    val position_neutral: Double = 0.33
     suspend fun peripherals_subsystem() {
         val lock_pos_locked: Double = 0.19
         val lock_pos_go: Double = 0.36
@@ -116,110 +118,15 @@ class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
             carousel.power = (op.gamepad2.left_trigger - op.gamepad2.right_trigger).toDouble()
 
 
-            if (op.gamepad2.dpad_down) intake_servo.position = position_hold_cube
-            else if (op.gamepad2.dpad_up) intake_servo.position = position_let_go
-            else if (op.gamepad2.dpad_left) intake_servo.position = position_hold_ball
-            else if (op.gamepad2.dpad_right) intake_servo.position = position_neutral
+            if (op.gamepad2.dpad_down) intake_servo.position = CLAMP_POS_HOLD_CUBE
+            else if (op.gamepad2.dpad_up) intake_servo.position = CLAMP_POS_RELEASE
+            else if (op.gamepad2.dpad_left) intake_servo.position = CLAMP_POS_HOLD_BALL
+            else if (op.gamepad2.dpad_right) intake_servo.position = CLAMP_POS_NEUTRAL
             //Variables for moving the box to hold the cube
             //Left servo
         }
     }
-    val outake_position_left_down: Double = 0.0
-    val outake_position_left_up: Double = 0.34
-    val outake_position_left_go: Double = 0.57
-    val outtake_position_left_horizontal: Double = 0.67
-    suspend fun outtake_subsystem() {
-        lift_left.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        lift_right.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        op.start_signal.await()
-        op.while_live {
 
-
-            val lift_lvl1 = 0;
-            val lift_lvl2 = -400;
-            val lift_lvl3 = -750;
-
-            if(op.gamepad2.x) {
-                outtake_arm_go(lift_lvl1, outake_position_left_go);
-            }
-            if(op.gamepad2.y) {
-                outtake_arm_go(lift_lvl2, outake_position_left_go);
-            }
-            if(op.gamepad2.b) {
-                outtake_arm_go(lift_lvl3, outake_position_left_go);
-            }
-
-
-            if (op.gamepad2.right_bumper) {
-                intake_servo.position = position_hold_cube
-                outake_left.position = outake_position_left_up
-                outake_right.position = outake_position_left_up
-                delay(100)
-                lift_left.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-                lift_right.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-                lift_left.power = 1.0
-                lift_right.power = 1.0
-                while (!op.stop_signal.is_greenlight() && !lift_limit.isPressed()) {
-                    yield()
-                }
-                lift_left.power = 0.0
-                lift_right.power = 0.0
-                lift_left.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-                lift_right.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-                outake_left.position = outake_position_left_down
-                outake_right.position = outake_position_left_down
-                intake_servo.position = position_neutral
-            }
-
-
-            if (op.gamepad2.left_bumper) {
-                lift_left.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-                lift_right.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-                var lift_power = op.gamepad2.right_stick_y.toDouble() * 0.6
-                if (lift_limit.isPressed) lift_power = Math.min(lift_power, 0.0)
-                op.telemetry.addData("Limit Switch", lift_limit.isPressed)
-                op.telemetry.addData("Lift Left", lift_left.currentPosition)
-                op.telemetry.addData("Lift Right", lift_right.currentPosition)
-                lift_left.power = lift_power
-                lift_right.power = lift_power
-            }
-
-            /*if (op.gamepad2.x) {
-                outake_left.position = outake_position_left_down
-                outake_right.position = outake_position_left_down
-            }
-            if (op.gamepad2.y) {
-                outake_left.position = outake_position_left_up
-                outake_right.position = outake_position_left_up;
-            }
-            if (op.gamepad2.b) {
-                outake_left.position = outake_position_left_go
-                outake_right.position = outake_position_left_go
-            }*/
-        }
-    }
-
-    suspend fun outtake_arm_go(level:Int, outtake_position: Double){
-        outake_left.position = outake_position_left_up
-        outake_right.position = outake_position_left_up
-        intake_servo.position = position_hold_cube
-        delay(100)
-        lift_left.targetPosition = level;
-        lift_right.targetPosition = level;
-        lift_left.mode = DcMotor.RunMode.RUN_TO_POSITION;
-        lift_right.mode = DcMotor.RunMode.RUN_TO_POSITION;
-        lift_left.power = -1.0;
-        lift_right.power = -1.0;
-        while (!op.stop_signal.is_greenlight() && lift_left.currentPosition - 10 > lift_left.targetPosition && !op.gamepad2.left_bumper) {
-            yield()
-            op.telemetry.addData("Cool", lift_left.currentPosition)
-
-        }
-        outake_left.position = outtake_position
-        outake_right.position = outtake_position
-        //lift_left.power = 0.0;
-        //lift_right.power = 0.0;
-    }
 
     suspend fun philip_button_subsystem() {
         op.start_signal.await()
@@ -232,4 +139,100 @@ class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
         }
     }
 
+}
+
+class OuttakeController(op: AsyncOpMode, manual_controls_enabled: Boolean) {
+    val op = op
+    val manual_controls_enabled = manual_controls_enabled
+
+    val outake_left = op.hardwareMap["outtake_left"] as Servo
+    val outake_right = op.hardwareMap["outtake_right"] as Servo
+    val intake_servo = op.hardwareMap["clamp"] as Servo
+    val lift_left = op.hardwareMap["lift_left"] as DcMotorEx
+    val lift_right = op.hardwareMap["lift_right"] as DcMotorEx
+    val lift_limit = op.hardwareMap["lift_limit"] as TouchSensor
+
+    init {
+        lift_right.direction = DcMotorSimple.Direction.FORWARD
+        outake_left.direction =  Servo.Direction.REVERSE
+    }
+
+    suspend fun teleop_subsystem() {
+        lift_left.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        lift_right.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        op.start_signal.await()
+        op.while_live {
+
+            if(op.gamepad2.x) {
+                outtake_arm_go(lift_lvl1, OUTTAKE_POSITION_OUTSIDE);
+            }
+            if(op.gamepad2.y) {
+                outtake_arm_go(lift_lvl2, OUTTAKE_POSITION_OUTSIDE);
+            }
+            if(op.gamepad2.b) {
+                outtake_arm_go(lift_lvl3, OUTTAKE_POSITION_OUTSIDE);
+            }
+
+
+            if (op.gamepad2.right_bumper) {
+                outtake_reset()
+            }
+
+
+            if (op.gamepad2.left_bumper && manual_controls_enabled) {
+                lift_left.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+                lift_right.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+                var lift_power = op.gamepad2.right_stick_y.toDouble() * 0.6
+                if (lift_limit.isPressed) lift_power = Math.min(lift_power, 0.0)
+                op.telemetry.addData("Limit Switch", lift_limit.isPressed)
+                op.telemetry.addData("Lift Left", lift_left.currentPosition)
+                op.telemetry.addData("Lift Right", lift_right.currentPosition)
+                lift_left.power = lift_power
+                lift_right.power = lift_power
+            }
+        }
+    }
+
+    suspend fun outtake_arm_go(level:Int, outtake_position: Double){
+        outake_left.position = OUTTAKE_POSITION_VERTICAL
+        outake_right.position = OUTTAKE_POSITION_VERTICAL
+        intake_servo.position = CLAMP_POS_HOLD_CUBE
+        delay(100)
+        lift_left.targetPosition = level;
+        lift_right.targetPosition = level;
+        lift_left.mode = DcMotor.RunMode.RUN_TO_POSITION;
+        lift_right.mode = DcMotor.RunMode.RUN_TO_POSITION;
+        lift_left.power = -1.0;
+        lift_right.power = -1.0;
+        while (!op.stop_signal.is_greenlight() && lift_left.currentPosition - 10 > lift_left.targetPosition && (!op.gamepad2.left_bumper && manual_controls_enabled)) {
+            yield()
+            op.telemetry.addData("Cool", lift_left.currentPosition)
+
+        }
+        outake_left.position = outtake_position
+        outake_right.position = outtake_position
+        //lift_left.power = 0.0;
+        //lift_right.power = 0.0;
+    }
+
+    suspend fun outtake_reset() {
+        intake_servo.position = CLAMP_POS_HOLD_CUBE
+        outake_left.position = OUTTAKE_POSITION_VERTICAL
+        outake_right.position = OUTTAKE_POSITION_VERTICAL
+        delay(100)
+        lift_left.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        lift_right.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        lift_left.power = 1.0
+        lift_right.power = 1.0
+        while (!op.stop_signal.is_greenlight() && !lift_limit.isPressed()) {
+            yield()
+        }
+        lift_left.power = 0.0
+        lift_right.power = 0.0
+        lift_left.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        lift_right.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        outake_left.position = OUTTAKE_POSITION_INSIDE
+        outake_right.position = OUTTAKE_POSITION_INSIDE
+        intake_servo.position = CLAMP_POS_NEUTRAL
+    }
 }

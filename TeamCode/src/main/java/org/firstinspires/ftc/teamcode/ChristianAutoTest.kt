@@ -13,7 +13,7 @@ class ChristianAutoTest(op: AsyncOpMode) : DeferredAsyncOpMode {
         val path = NoCarouselAutoPath(true, bot.trajectory_builder_factory())
         bot.poseEstimate = path.initial_pose
         for (traj in path.trajectories) {
-            follow_trajectory(traj, bot, op)
+            follow_trajectory_sequence(traj, bot, op)
         }
     }
 }
