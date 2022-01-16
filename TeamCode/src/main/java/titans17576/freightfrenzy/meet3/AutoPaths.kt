@@ -5,7 +5,11 @@ import com.acmerobotics.roadrunner.geometry.Vector2d
 import titans17576.ftcrc7573.*
 
 class Path_StartCarousel_Vision_Carousel_Depo(is_red: Boolean, factory: TrajectoryBuilderFactory)
-    : PathBuilder7573(Pose2d(-28.0, -63.0 * (if (is_red) 1.0 else -1.0), 90.0.toRadians * (if (is_red) 1.0 else -1.0)), factory) {
+    : PathBuilder7573(Pose2d(
+    if (is_red) -28.0 else -40.0,
+    -63.0 * (if (is_red) 1.0 else -1.0),
+    90.0.toRadians * (if (is_red) 1.0 else -1.0)
+), factory) {
     val side = if (is_red) 1.0 else -1.0
 
     init {
@@ -19,17 +23,27 @@ class Path_StartCarousel_Vision_Carousel_Depo(is_red: Boolean, factory: Trajecto
                 .splineTo(Vector2d(-30.0, -18 * side), -20.0.toRadians * side)
                 .build()
         )
-        trajectories.add(
-            new_movement()
-                .setReversed(false)
-                .splineTo(Vector2d(-60.0, -53.0 * side), -90.0.toRadians * side)
-                //.splineTo(Vector2d(40.0, -45.0 * side), 0.0)
-                .build()
-        )
+        if (is_red) {
+            trajectories.add(
+                new_movement()
+                    .setReversed(false)
+                    .splineTo(Vector2d(-60.0, -53.0 * side), -90.0.toRadians * side)
+                    //.splineTo(Vector2d(40.0, -45.0 * side), 0.0)
+                    .build()
+            )
+        } else {
+            trajectories.add(
+                new_movement()
+                    .setReversed(false)
+                    .splineTo(Vector2d(-53.0, -60.0 * side), -180.0.toRadians * side)
+                    //.splineTo(Vector2d(40.0, -45.0 * side), 0.0)
+                    .build()
+            )
+        }
         trajectories.add(
             new_movement()
                 .setReversed(true)
-                .splineTo(Vector2d(-60.0, -37.5 * side), -90.0.toRadians * side)
+                .splineTo(Vector2d(-60.0, -36.5 * side), 90.0.toRadians * side)
                 .build()
         )
     }

@@ -194,8 +194,9 @@ class OuttakeController(op: AsyncOpMode, manual_controls_enabled: Boolean) {
         }
     }
 
+    val lift_power = 0.9
     suspend fun outtake_arm_go(level:Int, outtake_position: Double){
-        outake_left.position = OUTTAKE_POSITION_VERTICAL
+        /*outake_left.position = OUTTAKE_POSITION_VERTICAL
         outake_right.position = OUTTAKE_POSITION_VERTICAL
         intake_servo.position = CLAMP_POS_HOLD_CUBE
         delay(100)
@@ -203,8 +204,8 @@ class OuttakeController(op: AsyncOpMode, manual_controls_enabled: Boolean) {
         lift_right.targetPosition = level;
         lift_left.mode = DcMotor.RunMode.RUN_TO_POSITION;
         lift_right.mode = DcMotor.RunMode.RUN_TO_POSITION;
-        lift_left.power = -1.0;
-        lift_right.power = -1.0;
+        lift_left.power = -lift_power;
+        lift_right.power = -lift_power;
         while (!op.stop_signal.is_greenlight() && lift_left.currentPosition - 10 > lift_left.targetPosition && (!op.gamepad2.left_bumper && manual_controls_enabled)) {
             yield()
             op.telemetry.addData("Cool", lift_left.currentPosition)
@@ -213,18 +214,18 @@ class OuttakeController(op: AsyncOpMode, manual_controls_enabled: Boolean) {
         outake_left.position = outtake_position
         outake_right.position = outtake_position
         //lift_left.power = 0.0;
-        //lift_right.power = 0.0;
+        //lift_right.power = 0.0;*/
     }
 
     suspend fun outtake_reset() {
-        intake_servo.position = CLAMP_POS_HOLD_CUBE
+        /*intake_servo.position = CLAMP_POS_HOLD_CUBE
         outake_left.position = OUTTAKE_POSITION_VERTICAL
         outake_right.position = OUTTAKE_POSITION_VERTICAL
         delay(100)
         lift_left.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         lift_right.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-        lift_left.power = 1.0
-        lift_right.power = 1.0
+        lift_left.power = lift_power
+        lift_right.power = lift_power
         while (!op.stop_signal.is_greenlight() && !lift_limit.isPressed()) {
             yield()
         }
@@ -234,6 +235,6 @@ class OuttakeController(op: AsyncOpMode, manual_controls_enabled: Boolean) {
         lift_right.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         outake_left.position = OUTTAKE_POSITION_INSIDE
         outake_right.position = OUTTAKE_POSITION_INSIDE
-        intake_servo.position = CLAMP_POS_NEUTRAL
+        intake_servo.position = CLAMP_POS_NEUTRAL*/
     }
 }
