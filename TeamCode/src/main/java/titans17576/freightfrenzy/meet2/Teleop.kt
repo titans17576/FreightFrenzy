@@ -35,6 +35,7 @@ class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
     val carousel = op.hardwareMap["carousel"] as CRServo
     val intake_servo = op.hardwareMap["clamp"] as Servo
     val lock_servo = op.hardwareMap["intake_clamp"] as Servo
+    val philip = true
 
     init {
         left_front.direction = DcMotorSimple.Direction.FORWARD
@@ -52,7 +53,7 @@ class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
             drive_subsystem()
         }
         op.launch { peripherals_subsystem() }
-        op.launch { OuttakeController(op, true).teleop_subsystem() }
+        op.launch { OuttakeController(op, true).teleop_subsystem(philip) }
         op.launch { philip_button_subsystem() }
     }
     suspend fun drive_subsystem(){
@@ -76,7 +77,7 @@ class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
             var turn = op.gamepad1.right_stick_x.toDouble()
             drive *= Math.abs(drive)
             turn *= Math.abs(turn)
-            val slow = if (op.gamepad1.right_bumper) 0.25 else if (op.gamepad1.left_bumper) 1.0 else  0.8;
+            val slow = if (op.gamepad1.right_bumper || op.gamepad2.right_bumper) 0.25 else if (op.gamepad1.left_bumper) 1.0 else  0.8;
 
             //POV drive (not tank)
             left_back.power = (drive + turn) * slow
@@ -84,10 +85,6 @@ class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
             right_back.power = (drive - turn) * slow
             right_front.power = (drive - turn) * slow
 
-            /*left_back.power = op.gamepad1.left_stick_y.toDouble()
-            left_front.power = op.gamepad1.left_stick_y.toDouble()
-            right_front.power = op.gamepad1.right_stick_y.toDouble()
-            right_back.power = op.gamepad1.right_stick_y.toDouble()*/
         }
     }
 
@@ -105,23 +102,15 @@ class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
             intake_power = 0.0
             intake_power += op.gamepad1.right_trigger
             intake_power -= op.gamepad1.left_trigger
-            //intake_power += op.gamepad2.right_trigger
-            //intake_power -= op.gamepad2.left_trigger
             intake.power = intake_power
 
-            //Carousel Servo
-            /*if (op.gamepad2.a) {
-                if (op.gamepad2.left_bumper || op.gamepad1.a) carousel.power = -1.0
-                else carousel.power = 1.0
-            }
-            else carousel.power = 0.0*/
             carousel.power = (op.gamepad2.left_trigger - op.gamepad2.right_trigger).toDouble()
 
 
-            if (op.gamepad2.dpad_down) intake_servo.position = CLAMP_POS_HOLD_CUBE
-            else if (op.gamepad2.dpad_up) intake_servo.position = CLAMP_POS_RELEASE
-            else if (op.gamepad2.dpad_left) intake_servo.position = CLAMP_POS_HOLD_BALL
-            else if (op.gamepad2.dpad_right) intake_servo.position = CLAMP_POS_NEUTRAL
+            if (op.gamepad2.dpad_down || (philip && op.gamepad1.dpad_down)) intake_servo.position = CLAMP_POS_HOLD_CUBE
+            else if (op.gamepad2.dpad_up || (philip && op.gamepad1.dpad_up)) intake_servo.position = CLAMP_POS_RELEASE
+            else if (op.gamepad2.dpad_left || (philip && op.gamepad1.dpad_left)) intake_servo.position = CLAMP_POS_HOLD_BALL
+            else if (op.gamepad2.dpad_right || (philip && op.gamepad1.dpad_right)) intake_servo.position = CLAMP_POS_NEUTRAL
             //Variables for moving the box to hold the cube
             //Left servo
         }
@@ -154,28 +143,28 @@ class OuttakeController(op: AsyncOpMode, manual_controls_enabled: Boolean) {
 
     init {
         lift_right.direction = DcMotorSimple.Direction.FORWARD
-        lift_left.direction = DcMotorSimple.Direction.REVERSE
+        lift_left.direction = DcMotorSimple.Direction.FORWARD
         outake_left.direction =  Servo.Direction.REVERSE
     }
 
-    suspend fun teleop_subsystem() {
+    suspend fun teleop_subsystem(philip: Boolean) {
         lift_left.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         lift_right.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         op.start_signal.await()
         op.while_live {
 
-            if(op.gamepad2.x) {
+            if(op.gamepad2.x || (philip && op.gamepad1.x)) {
                 outtake_arm_go(lift_lvl1, OUTTAKE_POSITION_OUTSIDE);
             }
-            if(op.gamepad2.y) {
+            if(op.gamepad2.y || (philip && op.gamepad1.y)) {
                 outtake_arm_go(lift_lvl2, OUTTAKE_POSITION_OUTSIDE);
             }
-            if(op.gamepad2.b) {
+            if(op.gamepad2.b || (philip && op.gamepad1.b)) {
                 outtake_arm_go(lift_lvl3, OUTTAKE_POSITION_OUTSIDE);
             }
 
 
-            if (op.gamepad2.right_bumper) {
+            if (op.gamepad2.a || (philip && op.gamepad1.a)) {
                 outtake_reset()
             }
 
@@ -196,7 +185,7 @@ class OuttakeController(op: AsyncOpMode, manual_controls_enabled: Boolean) {
 
     val lift_power = 0.9
     suspend fun outtake_arm_go(level:Int, outtake_position: Double){
-        /*outake_left.position = OUTTAKE_POSITION_VERTICAL
+        outake_left.position = OUTTAKE_POSITION_VERTICAL
         outake_right.position = OUTTAKE_POSITION_VERTICAL
         intake_servo.position = CLAMP_POS_HOLD_CUBE
         delay(100)
@@ -214,11 +203,11 @@ class OuttakeController(op: AsyncOpMode, manual_controls_enabled: Boolean) {
         outake_left.position = outtake_position
         outake_right.position = outtake_position
         //lift_left.power = 0.0;
-        //lift_right.power = 0.0;*/
+        //lift_right.power = 0.0;
     }
 
     suspend fun outtake_reset() {
-        /*intake_servo.position = CLAMP_POS_HOLD_CUBE
+        intake_servo.position = CLAMP_POS_HOLD_CUBE
         outake_left.position = OUTTAKE_POSITION_VERTICAL
         outake_right.position = OUTTAKE_POSITION_VERTICAL
         delay(100)
@@ -235,6 +224,6 @@ class OuttakeController(op: AsyncOpMode, manual_controls_enabled: Boolean) {
         lift_right.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         outake_left.position = OUTTAKE_POSITION_INSIDE
         outake_right.position = OUTTAKE_POSITION_INSIDE
-        intake_servo.position = CLAMP_POS_NEUTRAL*/
+        intake_servo.position = CLAMP_POS_NEUTRAL
     }
 }

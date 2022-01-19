@@ -45,13 +45,16 @@ class Auto_StartCarousel_Vision_Carousel_Depo(is_red: Boolean, op: AsyncOpMode) 
 
         val barcode_eventually = op.async { get_grasshopper_location(op, this) }
         op.start_signal.await()
+        outtake.intake_servo.position = CLAMP_POS_HOLD_CUBE
         val barcode = barcode_eventually.await()
         outtake.intake_servo.position = CLAMP_POS_HOLD_CUBE
         op.launch { op.while_live { op.telemetry.addData("Barcode", barcode) } }
         delay(2000)
 
         //Drive to team shipping hub
+        outtake.intake_servo.position = CLAMP_POS_HOLD_CUBE
         follow_trajectory_sequence(path.trajectories.poll()!!, bot, op)
+        outtake.intake_servo.position = CLAMP_POS_HOLD_CUBE
         //Deploy into shipping hub
         outtake.outtake_arm_go(calc_lift_height(barcode), OUTTAKE_POSITION_OUTSIDE)
         delay(500)
@@ -62,6 +65,7 @@ class Auto_StartCarousel_Vision_Carousel_Depo(is_red: Boolean, op: AsyncOpMode) 
 
         //Drive to carousel
         follow_trajectory_sequence(path.trajectories.poll()!!, bot, op)
+
         //Do carousel
         carousel.power = 1.0
         delay(4000)
@@ -85,13 +89,16 @@ class Auto_StartWarehouse_Vision_Depo(is_red: Boolean, op: AsyncOpMode) : AutoBa
 
         val barcode_eventually = op.async { get_grasshopper_location(op, this) }
         op.start_signal.await()
+        outtake.intake_servo.position = CLAMP_POS_HOLD_CUBE
         val barcode = barcode_eventually.await()
         outtake.intake_servo.position = CLAMP_POS_HOLD_CUBE
         op.launch { op.while_live { op.telemetry.addData("Barcode", barcode) } }
         delay(500)
+        outtake.intake_servo.position = CLAMP_POS_HOLD_CUBE
 
         //Drive to team shipping hub
         follow_trajectory_sequence(path.trajectories.poll()!!, bot, op)
+        outtake.intake_servo.position = CLAMP_POS_HOLD_CUBE
         //Deploy into shipping hub
         outtake.outtake_arm_go(calc_lift_height(barcode), OUTTAKE_POSITION_OUTSIDE)
         delay(500)

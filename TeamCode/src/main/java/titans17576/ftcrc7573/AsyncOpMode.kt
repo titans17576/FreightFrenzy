@@ -20,7 +20,8 @@ public abstract class AsyncOpMode : OpMode() {
     lateinit var start_signal: Signal;
     lateinit var stop_signal: Signal;
 
-    private lateinit var dispatcher: AsyncOpModeDispatcher;
+    private lateinit var dispatcher: AsyncOpModeDispatcher
+    private lateinit var exception_handler: ExceptionHandler
     private lateinit var async_scope: CoroutineScope;
     fun launch(task: suspend CoroutineScope.() -> Unit): Job {
         return async_scope.launch(block = task)
@@ -33,7 +34,8 @@ public abstract class AsyncOpMode : OpMode() {
 
     override fun init() {
         dispatcher = AsyncOpModeDispatcher(this)
-        async_scope = CoroutineScope(EmptyCoroutineContext + dispatcher)
+        exception_handler = ExceptionHandler(dispatcher)
+        async_scope = CoroutineScope(EmptyCoroutineContext + dispatcher + exception_handler)
         start_signal = Signal()
         stop_signal = Signal()
         RUNNING_OP = this
@@ -58,14 +60,14 @@ public abstract class AsyncOpMode : OpMode() {
         telemetry.update()
     }
     override fun stop() {
-        launch {
+        /*launch {
             start_signal.blow_up_everything(Exception("Op Mode Stopped"))
             stop_signal.greenlight()
         }
         dispatcher.execute()
         telemetry.update()
         dispatcher.finish()
-        telemetry.update()
+        telemetry.update()*/
     }
 
     suspend fun while_live(f: suspend () -> Unit) {
@@ -87,7 +89,7 @@ private class AsyncOpModeDispatcher(op: AsyncOpMode) : CoroutineDispatcher() {
         if (error != null) {
             op.telemetry.addData("Error", error.toString())
             dispatches.clear()
-            //op.requestOpModeStop()
+            op.requestOpModeStop()
             return
         }
 
@@ -96,11 +98,13 @@ private class AsyncOpModeDispatcher(op: AsyncOpMode) : CoroutineDispatcher() {
         for (i in 0..size) {
             try {
                 dispatches.poll()?.run()
+                if (error != null) return
             } catch(e: Throwable) {
                 dispatches.clear()
                 error = e
                 op.telemetry.addData("Error", e.toString())
-                System.out.println("Alador!")
+                op.telemetry.update()
+                System.out.println("Alador! Throwable")
                 System.out.println("==========================")
                 System.out.println(e)
                 System.out.println("==========================")
@@ -108,8 +112,9 @@ private class AsyncOpModeDispatcher(op: AsyncOpMode) : CoroutineDispatcher() {
                 return
             }
         }
-        //println("End dispatcher exec")
     }
+    //println("End dispatcher exec")
+
     fun finish() {
         //TODO potentially implement timeout to force kill
         var tries_left = 3
@@ -127,6 +132,25 @@ private class AsyncOpModeDispatcher(op: AsyncOpMode) : CoroutineDispatcher() {
     override fun dispatchYield(context: CoroutineContext, block: Runnable) {
         dispatches_unimportant.add(block)
     }*/
+}
+
+private class ExceptionHandler(dispatcher: AsyncOpModeDispatcher,
+                               override val key: CoroutineContext.Key<*> = CoroutineExceptionHandler
+) : CoroutineExceptionHandler {
+    val dis = dispatcher
+
+    override fun handleException(context: CoroutineContext, e: Throwable) {
+        dis.dispatches.clear()
+        dis.error = e
+        dis.op.telemetry.addData("Error", e.toString())
+        dis.op.telemetry.update()
+        System.out.println("Alador!")
+        System.out.println("==========================")
+        System.out.println(e)
+        System.out.println("==========================")
+        dis.op.requestOpModeStop()
+
+    }
 }
 
 interface DeferredAsyncOpMode {
