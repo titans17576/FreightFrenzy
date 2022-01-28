@@ -34,15 +34,15 @@ class Teleop : DeferredAsyncOpMode {
 
             var drive = -OP.gamepad1.left_stick_y.toDouble()
             var turn = OP.gamepad1.right_stick_x.toDouble()
-            drive *= java.lang.Math.abs(drive)
-            turn *= java.lang.Math.abs(turn)
-            val slow = if (OP.gamepad1.right_bumper || OP.gamepad2.right_bumper) 0.25 else if (OP.gamepad1.left_bumper) 1.0 else  0.8;
+            var strafe = OP.gamepad1.left_stick_x.toDouble()
+
+            val slow = if (OP.gamepad1.right_bumper) 0.4 else 1.0
 
             //POV drive (not tank)
-            R.left_back.power = (drive + turn) * slow
-            R.left_front.power = (drive + turn) * slow
-            R.right_back.power = (drive - turn) * slow
-            R.right_front.power = (drive - turn) * slow
+            R.left_back.power = (drive + turn - strafe) * slow
+            R.left_front.power = (drive + turn + strafe) * slow
+            R.right_back.power = (drive - turn - strafe) * slow
+            R.right_front.power = (drive - turn + strafe) * slow
 
             if (OP.gamepad2.x){
                 BreakDance()
