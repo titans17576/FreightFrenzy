@@ -67,12 +67,15 @@ public abstract class AsyncOpMode : OpMode() {
         telemetry.update()
     }
 
-    suspend fun while_live(f: suspend () -> Unit) {
+    suspend fun while_live(f: suspend (it: () -> Unit) -> Unit) {
+        var cancelled = false
         while (start_signal.is_greenlight() && !stop_signal.is_greenlight()) {
-            f()
+            f { cancelled = true }
+            if (cancelled) break
             yield()
         }
     }
+
 }
 
 private class AsyncOpModeDispatcher(op: AsyncOpMode) : CoroutineDispatcher() {

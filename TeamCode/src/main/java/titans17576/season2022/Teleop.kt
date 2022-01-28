@@ -43,6 +43,10 @@ class Teleop : DeferredAsyncOpMode {
             R.left_front.power = (drive + turn) * slow
             R.right_back.power = (drive - turn) * slow
             R.right_front.power = (drive - turn) * slow
+
+            if (OP.gamepad2.x){
+                BreakDance()
+            }
         }
     }
 
@@ -84,4 +88,34 @@ class Teleop : DeferredAsyncOpMode {
         OP.gamepad1.rumble(1.0, 1.0, 350)
     }
 
+    suspend fun balance_bucket(){
+        OP.start_signal.await()
+        OP.while_live {
+            if (OP.gamepad2.a && Math.abs(ARM_LEVEL3 - R.outtake_arm.currentPosition) <= 30){
+                R.outtake_bucket.position = BUCKET_POSITION_DUMP
+            }
+            else{
+                var current_bucket_position = (((BUCKET_BALANCED-BUCKET_POSITION_LOADING)/(ARM_LEVEL3 - ARM_INSIDE))*(R.outtake_arm.currentPosition - ARM_INSIDE)) + BUCKET_POSITION_LOADING
+                if (current_bucket_position > BUCKET_POSITION_LOADING) {
+                    current_bucket_position = BUCKET_POSITION_LOADING
+                } else if (current_bucket_position < BUCKET_BALANCED) {
+                    current_bucket_position = BUCKET_BALANCED
+                }
+                R.outtake_bucket.position = current_bucket_position
+            }
+        }
+    }
+
+    suspend fun BreakDance(){
+        val timeout = OP.async {
+            delay(10000)
+        }
+        OP.while_live {
+            R.left_back.power = 0.7
+            R.left_front.power = 0.7
+            if (timeout.isCompleted){
+                it()
+            }
+        }
+    }
 }

@@ -23,8 +23,12 @@ val OUTTAKE_POSITION_VERTICAL: Double = 0.34
 val OUTTAKE_POSITION_OUTSIDE: Double = 0.57
 val OUTTAKE_POSITION_OUTSIDE_HORIZONTAL: Double = 0.67
 
-val BUCKET_POSITION_LOADING = 0.25
-val BUCKET_POSITION_DUMP = 0.65
+val ARM_INSIDE: Int = 0;
+val ARM_LEVEL3: Int = 0;
+
+val BUCKET_POSITION_LOADING = 0.156
+val BUCKET_POSITION_DUMP = 0.74
+val BUCKET_BALANCED = 0.05
 
 lateinit var R: Robot
 
@@ -38,7 +42,7 @@ class Robot() {
     val intake_motor = OP.hardwareMap.get("intake") as DcMotorEx
 
     val outtake_arm = OP.hardwareMap.get("outtake_arm") as DcMotorEx
-    val outtake_bucket = OP.hardwareMap.get("outtake_bucket") as DcMotorEx
+    val outtake_bucket = OP.hardwareMap.get("outtake_bucket") as Servo
 
     val carousel = OP.hardwareMap.get("carousel") as DcMotorEx
 
