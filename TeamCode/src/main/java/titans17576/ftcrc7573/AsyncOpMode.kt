@@ -4,16 +4,13 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManager
 import kotlinx.coroutines.*
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta
-import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl
-import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
-import kotlin.coroutines.Continuation
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.reflect.KClass
 import kotlin.reflect.jvm.javaType
 
-var RUNNING_OP: AsyncOpMode? = null;
+lateinit var OP: AsyncOpMode;
 
 public abstract class AsyncOpMode : OpMode() {
     abstract suspend fun op_mode()
@@ -38,7 +35,7 @@ public abstract class AsyncOpMode : OpMode() {
         async_scope = CoroutineScope(EmptyCoroutineContext + dispatcher + exception_handler)
         start_signal = Signal()
         stop_signal = Signal()
-        RUNNING_OP = this
+        OP = this
         launch {
             yield()
             op_mode()
@@ -60,14 +57,14 @@ public abstract class AsyncOpMode : OpMode() {
         telemetry.update()
     }
     override fun stop() {
-        /*launch {
+        launch {
             start_signal.blow_up_everything(Exception("Op Mode Stopped"))
             stop_signal.greenlight()
         }
         dispatcher.execute()
         telemetry.update()
         dispatcher.finish()
-        telemetry.update()*/
+        telemetry.update()
     }
 
     suspend fun while_live(f: suspend () -> Unit) {
@@ -128,10 +125,6 @@ private class AsyncOpModeDispatcher(op: AsyncOpMode) : CoroutineDispatcher() {
     override fun dispatch(context: CoroutineContext, block: Runnable) {
         dispatches.put(block)
     }
-    /*@InternalCoroutinesApi
-    override fun dispatchYield(context: CoroutineContext, block: Runnable) {
-        dispatches_unimportant.add(block)
-    }*/
 }
 
 private class ExceptionHandler(dispatcher: AsyncOpModeDispatcher,

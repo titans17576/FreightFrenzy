@@ -9,7 +9,7 @@ import titans17576.ftcrc7573.DeferredAsyncOpMode
 
 class ServoTest(op: AsyncOpMode) : DeferredAsyncOpMode {
     val op = op
-    var servoright: Servo? = null
+    var servoright: Servo? = op.hardwareMap["servo"] as Servo
     var servoname = ""
     //val servoleft = op.hardwareMap["outtake_left"] as Servo
     var position = 0.0
@@ -17,13 +17,14 @@ class ServoTest(op: AsyncOpMode) : DeferredAsyncOpMode {
     override suspend fun op_mode() {
         //servoleft.direction = Servo.Direction.REVERSE
         //op.launch { servo_direction_change(servoleft, op.gamepad2) }
-        op.launch { servo_switcher() }
+        //op.launch { servo_switcher() }
         op.launch { servo_direction_change(op.gamepad1) }
 
         op.start_signal.await()
         op.while_live {
             if (op.gamepad1.dpad_up) position += 0.01
             if (op.gamepad1.dpad_down) position -= 0.01
+            position = op.gamepad1.right_trigger.toDouble()
             //if (op.gamepad2.dpad_up) position2 += 0.01
             //if (op.gamepad2.dpad_down) position2 -= 0.01
             servoright!!.position = position

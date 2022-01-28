@@ -18,7 +18,7 @@ fun generated_op_mode_registrar(m: OpModeManager) {
 fun freight_frenzy_meet_3() {
     register_defered_async_opmode("/17576/LM3/Teleop", false) { op -> titans17576.freightfrenzy.meet2.Teleop(op) }
     register_defered_async_opmode("/17576/LM3/Red/Carousel/Vision-Carousel-Park", true) { op -> titans17576.freightfrenzy.meet3.Auto_StartCarousel_Vision_Carousel_Depo(true, op) }
-    register_defered_async_opmode("/17576/LM3/Blue/Carousel/Vision-Carousel-Park", true) { op -> titans17576.freightfrenzy.meet3.Auto_StartCarousel_Vision_Carousel_Depo(false, op) }
+    register_defered_async_opmode("/17576/LM3/Blue/CaServoTestrousel/Vision-Carousel-Park", true) { op -> titans17576.freightfrenzy.meet3.Auto_StartCarousel_Vision_Carousel_Depo(false, op) }
     register_defered_async_opmode("/17576/LM3/Red/Warehouse/Vision-Park", true) { op -> titans17576.freightfrenzy.meet3.Auto_StartWarehouse_Vision_Depo(true, op) }
     register_defered_async_opmode("/17576/LM3/Blue/Warehouse/Vision-Park", true) { op -> titans17576.freightfrenzy.meet3.Auto_StartWarehouse_Vision_Depo(false, op) }
 }

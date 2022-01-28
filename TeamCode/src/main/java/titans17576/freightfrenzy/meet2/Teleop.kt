@@ -5,23 +5,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
 import titans17576.ftcrc7573.AsyncOpMode
 import titans17576.ftcrc7573.DeferredAsyncOpMode
-
-//Variables for holding the cube
-val CLAMP_POS_HOLD_CUBE: Double = 0.47
-val CLAMP_POS_HOLD_BALL: Double = 0.43
-val CLAMP_POS_RELEASE: Double = 0.25
-val CLAMP_POS_NEUTRAL: Double = 0.33
-
-//Lift heights
-val lift_lvl1 = 0;
-val lift_lvl2 = -400;
-val lift_lvl3 = -750;
-
-//Outtake arm positions
-val OUTTAKE_POSITION_INSIDE: Double = 0.01
-val OUTTAKE_POSITION_VERTICAL: Double = 0.34
-val OUTTAKE_POSITION_OUTSIDE: Double = 0.57
-val OUTTAKE_POSITION_OUTSIDE_HORIZONTAL: Double = 0.67
+import titans17576.season2022.*
 
 class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
     val op = op;
@@ -198,7 +182,6 @@ class OuttakeController(op: AsyncOpMode, manual_controls_enabled: Boolean) {
         while (!op.stop_signal.is_greenlight() && lift_left.currentPosition - 10 > lift_left.targetPosition && (!op.gamepad2.left_bumper && manual_controls_enabled)) {
             yield()
             op.telemetry.addData("Cool", lift_left.currentPosition)
-
         }
         outake_left.position = outtake_position
         outake_right.position = outtake_position

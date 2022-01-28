@@ -9,6 +9,7 @@ import org.firstinspires.ftc.teamcode.drive.Meet2Drive
 import titans17576.freightfrenzy.meet2.*
 import titans17576.ftcrc7573.follow_trajectory_sequence
 import titans17576.ftcrc7573.trajectory_builder_factory
+import titans17576.season2022.*
 
 suspend fun get_grasshopper_location(op: AsyncOpMode, scope: CoroutineScope): Barcode {
     val feed = camera_init(op)
