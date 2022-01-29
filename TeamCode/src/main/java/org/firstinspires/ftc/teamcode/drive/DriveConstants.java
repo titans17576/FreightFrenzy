@@ -21,7 +21,7 @@ public class DriveConstants {
      * These are motor constants that should be listed online for your motors.
      */
     public static final double TICKS_PER_REV = 537.6;
-    public static final double MAX_RPM = 312;
+    public static final double MAX_RPM = 340;
 
     /*
      * Set RUN_USING_ENCODER to true to enable built-in hub velocity control using drive encoders.
@@ -43,9 +43,9 @@ public class DriveConstants {
      * angular distances although most angular parameters are wrapped in Math.toRadians() for
      * convenience. Make sure to exclude any gear ratio included in MOTOR_CONFIG from GEAR_RATIO.
      */
-    public static double WHEEL_RADIUS = 2.3622; // in
+    public static double WHEEL_RADIUS = 1.88976; // in
     public static double GEAR_RATIO = 1; // output (wheel) speed / input (motor) speed
-    public static double TRACK_WIDTH = 16.6; // in
+    public static double TRACK_WIDTH = 11; // in
 
     /*
      * These are the feedforward parameters used to model the drive motor behavior. If you are using
@@ -53,9 +53,9 @@ public class DriveConstants {
      * motor encoders or have elected not to use them for velocity control, these values should be
      * empirically tuned.
      */
-    public static double kV = 0.0195;
-    public static double kA = 0.0075;
-    public static double kStatic = 0.14350;
+    public static double kV = 0;
+    public static double kA = 0;
+    public static double kStatic = 0;
 
     /*
      * These values are used to generate the trajectories for you robot. To ensure proper operation,
@@ -64,10 +64,10 @@ public class DriveConstants {
      * small and gradually increase them later after everything is working. All distance units are
      * inches.
      */
-    public static double MAX_VEL = 52; //65;
-    public static double MAX_ACCEL = 70; //65;
-    public static double MAX_ANG_VEL = 2.15; //Math.toRadians(223);
-    public static double MAX_ANG_ACCEL = 2.15; //Math.toRadians(223);
+    public static double MAX_VEL = 30; //65;
+    public static double MAX_ACCEL = 30; //65;
+    public static double MAX_ANG_VEL = Math.toRadians(180); //Math.toRadians(223);
+    public static double MAX_ANG_ACCEL = Math.toRadians(180); //Math.toRadians(223);
 
 
     public static double encoderTicksToInches(double ticks) {
