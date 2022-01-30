@@ -43,15 +43,11 @@ class Teleop : DeferredAsyncOpMode {
             R.left_front.power = (drive + turn + strafe) * slow
             R.right_back.power = (drive - turn - strafe) * slow
             R.right_front.power = (drive - turn + strafe) * slow
-
-            if (OP.gamepad2.x){
-                BreakDance()
-            }
         }
     }
 
-    suspend fun peripherals_subsystem() {
-        /*val lock_pos_locked: Double = 0.19
+    /*suspend fun peripherals_subsystem() {
+        val lock_pos_locked: Double = 0.19
         val lock_pos_go: Double = 0.36
         R.lock_servo.position = lock_pos_locked
 
@@ -72,7 +68,35 @@ class Teleop : DeferredAsyncOpMode {
             else if (OP.gamepad2.dpad_up || OP.gamepad1.dpad_up) R.intake_clamp.position = CLAMP_POS_RELEASE
             else if (OP.gamepad2.dpad_left || OP.gamepad1.dpad_left) R.intake_clamp.position = CLAMP_POS_HOLD_BALL
             else if (OP.gamepad2.dpad_right || OP.gamepad1.dpad_right) R.intake_clamp.position = CLAMP_POS_NEUTRAL
-        }*/
+        }
+    }*/
+
+    suspend fun peripherals_subsystem() {
+        OP.start_signal.await()
+        R.outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION
+
+        var intake_power = 0.0
+        var armposition = 0
+        OP.while_live {
+            intake_power = 0.0
+            intake_power += OP.gamepad1.right_trigger
+            intake_power -= OP.gamepad1.left_trigger
+            R.intake_motor.power = intake_power
+
+            R.carousel.power = (OP.gamepad2.left_trigger - OP.gamepad2.right_trigger).toDouble()
+
+            armposition += OP.gamepad2.right_stick_y.toInt()
+
+            if (R.outtake_arm.currentPosition > ARM_LEVEL3){
+                R.outtake_arm.targetPosition = ARM_LEVEL3
+            }
+            else if (R.outtake_arm.currentPosition < ARM_INSIDE){
+                R.outtake_arm.targetPosition = ARM_INSIDE
+            }
+            else {
+                R.outtake_arm.targetPosition = armposition
+            }
+        }
     }
 
     suspend fun endgame_notification_subsystem() {
@@ -102,19 +126,6 @@ class Teleop : DeferredAsyncOpMode {
                     current_bucket_position = BUCKET_BALANCED
                 }
                 R.outtake_bucket.position = current_bucket_position
-            }
-        }
-    }
-
-    suspend fun BreakDance(){
-        val timeout = OP.async {
-            delay(10000)
-        }
-        OP.while_live {
-            R.left_back.power = 0.7
-            R.left_front.power = 0.7
-            if (timeout.isCompleted){
-                it()
             }
         }
     }
