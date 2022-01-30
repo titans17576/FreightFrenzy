@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.teamcode.drive.Meet2Drive;
+import org.firstinspires.ftc.teamcode.drive.RegionalsDrive;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
 import java.util.Objects;
@@ -47,7 +48,7 @@ public class ManualFeedforwardTuner extends LinearOpMode {
 
     private FtcDashboard dashboard = FtcDashboard.getInstance();
 
-    private Meet2Drive drive;
+    private RegionalsDrive drive;
 
     enum Mode {
         DRIVER_MODE,
@@ -71,7 +72,7 @@ public class ManualFeedforwardTuner extends LinearOpMode {
 
         telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
 
-        drive = new Meet2Drive(hardwareMap);
+        drive = new RegionalsDrive(hardwareMap);
 
         mode = Mode.TUNING_MODE;
 
@@ -134,7 +135,7 @@ public class ManualFeedforwardTuner extends LinearOpMode {
                     drive.setWeightedDrivePower(
                             new Pose2d(
                                     -gamepad1.left_stick_y,
-                                    0,
+                                    gamepad1.left_stick_x,
                                     -gamepad1.right_stick_x
                             )
                     );

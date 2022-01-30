@@ -1,11 +1,14 @@
 package titans17576.ftcrc7573.test
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
 import titans17576.ftcrc7573.AsyncOpMode
 import titans17576.ftcrc7573.DeferredAsyncOpMode
 
+//@Disabled
 class MotorTest(op: AsyncOpMode) : DeferredAsyncOpMode {
     val op = op;
     val left_front = op.hardwareMap["left_front"] as DcMotorEx

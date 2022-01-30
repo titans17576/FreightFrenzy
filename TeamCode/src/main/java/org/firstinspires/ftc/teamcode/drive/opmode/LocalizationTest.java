@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.drive.Meet2Drive;
+import org.firstinspires.ftc.teamcode.drive.RegionalsDrive;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
 /**
@@ -19,7 +20,7 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 public class LocalizationTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
-        Meet2Drive drive = new Meet2Drive(hardwareMap);
+        RegionalsDrive drive = new RegionalsDrive(hardwareMap);
 
         drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
@@ -29,7 +30,7 @@ public class LocalizationTest extends LinearOpMode {
             drive.setWeightedDrivePower(
                     new Pose2d(
                             -gamepad1.left_stick_y,
-                            0,
+                            -gamepad1.left_stick_x,
                             -gamepad1.right_stick_x
                     )
             );
