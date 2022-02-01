@@ -74,7 +74,10 @@ class Teleop : DeferredAsyncOpMode {
 
     suspend fun peripherals_subsystem() {
         OP.start_signal.await()
-        R.outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION
+
+        R.outtake_arm.targetPosition = 0;
+
+        //R.outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION
 
         var intake_power = 0.0
         var armposition = 0

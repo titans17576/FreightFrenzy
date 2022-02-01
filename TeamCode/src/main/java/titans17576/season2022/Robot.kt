@@ -52,6 +52,12 @@ class Robot() {
         right_front.direction = DcMotorSimple.Direction.REVERSE
         right_back.direction = DcMotorSimple.Direction.REVERSE
         outtake_arm.direction = DcMotorSimple.Direction.FORWARD
+
+        left_front.targetPosition = 0;
+        left_back.targetPosition = 0;
+        right_front.targetPosition = 0;
+        right_back.targetPosition = 0;
+
         left_front.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         left_back.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         right_front.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
