@@ -2,7 +2,6 @@ package titans17576.season2022
 
 import com.qualcomm.robotcore.hardware.DcMotor
 import kotlinx.coroutines.delay
-import titans17576.ftcrc7573.AsyncOpMode
 import titans17576.ftcrc7573.DeferredAsyncOpMode
 import titans17576.ftcrc7573.OP
 
@@ -14,6 +13,7 @@ class Teleop : DeferredAsyncOpMode {
         OP.launch { drive_subsystem() }
         OP.launch { peripherals_subsystem() }
         OP.launch { endgame_notification_subsystem() }
+        OP.launch { balance_bucket_subsystem() }
     }
 
     suspend fun drive_subsystem(){
@@ -42,42 +42,19 @@ class Teleop : DeferredAsyncOpMode {
             //POV drive (not tank)
             R.left_back.power = (drive + turn - strafe) * slow
             R.left_front.power = (drive + turn + strafe) * slow
-            R.right_back.power = (drive - turn - strafe) * slow
-            R.right_front.power = (drive - turn + strafe) * slow
+            R.right_back.power = (drive - turn + strafe) * slow
+            R.right_front.power = (drive - turn - strafe) * slow
         }
     }
-
-    /*suspend fun peripherals_subsystem() {
-        val lock_pos_locked: Double = 0.19
-        val lock_pos_go: Double = 0.36
-        R.lock_servo.position = lock_pos_locked
-
-        OP.start_signal.await()
-
-        R.lock_servo.position = lock_pos_go
-
-        var intake_power = 0.0
-        OP.while_live {
-            intake_power = 0.0
-            intake_power += OP.gamepad1.right_trigger
-            intake_power -= OP.gamepad1.left_trigger
-            R.intake_motor.power = intake_power
-
-            R.carousel.power = (OP.gamepad2.left_trigger - OP.gamepad2.right_trigger).toDouble()
-
-            if (OP.gamepad2.dpad_down || OP.gamepad1.dpad_down) R.intake_clamp.position = CLAMP_POS_HOLD_CUBE
-            else if (OP.gamepad2.dpad_up || OP.gamepad1.dpad_up) R.intake_clamp.position = CLAMP_POS_RELEASE
-            else if (OP.gamepad2.dpad_left || OP.gamepad1.dpad_left) R.intake_clamp.position = CLAMP_POS_HOLD_BALL
-            else if (OP.gamepad2.dpad_right || OP.gamepad1.dpad_right) R.intake_clamp.position = CLAMP_POS_NEUTRAL
-        }
-    }*/
 
     suspend fun peripherals_subsystem() {
         OP.start_signal.await()
 
         R.outtake_arm.targetPosition = 0;
 
-        //R.outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION
+        R.outtake_arm.targetPosition = ARM_INSIDE;
+        R.outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION;
+        R.outtake_arm.power = 0.5
 
         var intake_power = 0.0
         var armposition = 0
@@ -90,16 +67,14 @@ class Teleop : DeferredAsyncOpMode {
             R.carousel.power = (OP.gamepad2.left_trigger - OP.gamepad2.right_trigger).toDouble()
 
             armposition += OP.gamepad2.right_stick_y.toInt()
+            if (OP.gamepad2.b) armposition = ARM_LEVEL_3
+            if (OP.gamepad2.left_bumper) armposition = ARM_INSIDE
 
-            if (R.outtake_arm.currentPosition > ARM_LEVEL3){
-                R.outtake_arm.targetPosition = ARM_LEVEL3
-            }
-            else if (R.outtake_arm.currentPosition < ARM_INSIDE){
-                R.outtake_arm.targetPosition = ARM_INSIDE
-            }
-            else {
-                R.outtake_arm.targetPosition = armposition
-            }
+            if (R.outtake_arm.currentPosition > ARM_LEVEL_MAX) armposition = ARM_LEVEL_MAX
+            else if (R.outtake_arm.currentPosition < ARM_INSIDE) armposition = ARM_INSIDE
+            R.outtake_arm.targetPosition = armposition
+            OP.telemetry.addData("Arm Position Target", armposition);
+            OP.telemetry.addData("Arm Position Current", R.outtake_arm.currentPosition);
         }
     }
 
@@ -116,21 +91,23 @@ class Teleop : DeferredAsyncOpMode {
         OP.gamepad1.rumble(1.0, 1.0, 350)
     }
 
-    suspend fun balance_bucket(){
+    suspend fun balance_bucket_subsystem(){
         OP.start_signal.await()
         OP.while_live {
-            if (OP.gamepad2.a && Math.abs(ARM_LEVEL3 - R.outtake_arm.currentPosition) <= 30){
+            if (OP.gamepad2.a && Math.abs(ARM_LEVEL_3 - R.outtake_arm.currentPosition) <= 30){
                 R.outtake_bucket.position = BUCKET_POSITION_DUMP
             }
             else{
-                var current_bucket_position = (((BUCKET_BALANCED-BUCKET_POSITION_LOADING)/(ARM_LEVEL3 - ARM_INSIDE))*(R.outtake_arm.currentPosition - ARM_INSIDE)) + BUCKET_POSITION_LOADING
+                var current_bucket_position = (((BUCKET_BALANCED-BUCKET_POSITION_LOADING)/(ARM_LEVEL_3 - ARM_BUCKET_VROOM))*(R.outtake_arm.currentPosition - ARM_BUCKET_VROOM)) + BUCKET_POSITION_LOADING
                 if (current_bucket_position > BUCKET_POSITION_LOADING) {
                     current_bucket_position = BUCKET_POSITION_LOADING
                 } else if (current_bucket_position < BUCKET_BALANCED) {
                     current_bucket_position = BUCKET_BALANCED
                 }
                 R.outtake_bucket.position = current_bucket_position
+
             }
+            OP.telemetry.addData("Bucket position", R.outtake_bucket.position);
         }
     }
 }

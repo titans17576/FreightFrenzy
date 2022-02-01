@@ -24,9 +24,11 @@ val OUTTAKE_POSITION_OUTSIDE: Double = 0.57
 val OUTTAKE_POSITION_OUTSIDE_HORIZONTAL: Double = 0.67
 
 val ARM_INSIDE: Int = 0;
-val ARM_LEVEL3: Int = 0;
+val ARM_BUCKET_VROOM: Int = 195;
+val ARM_LEVEL_3: Int = 650;
+val ARM_LEVEL_MAX: Int = 1000;
 
-val BUCKET_POSITION_LOADING = 0.156
+val BUCKET_POSITION_LOADING = 0.326
 val BUCKET_POSITION_DUMP = 0.74
 val BUCKET_BALANCED = 0.05
 
@@ -51,7 +53,7 @@ class Robot() {
         left_back.direction = DcMotorSimple.Direction.FORWARD
         right_front.direction = DcMotorSimple.Direction.REVERSE
         right_back.direction = DcMotorSimple.Direction.REVERSE
-        outtake_arm.direction = DcMotorSimple.Direction.FORWARD
+        outtake_arm.direction = DcMotorSimple.Direction.REVERSE
 
         left_front.targetPosition = 0;
         left_back.targetPosition = 0;
