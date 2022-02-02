@@ -23,6 +23,7 @@ val OUTTAKE_POSITION_VERTICAL: Double = 0.34
 val OUTTAKE_POSITION_OUTSIDE: Double = 0.57
 val OUTTAKE_POSITION_OUTSIDE_HORIZONTAL: Double = 0.67
 
+
 val ARM_INSIDE: Int = 0;
 val ARM_BUCKET_VROOM: Int = 195;
 val ARM_LEVEL_3: Int = 650;
@@ -45,6 +46,7 @@ class Robot() {
 
     val outtake_arm = OP.hardwareMap.get("outtake_arm") as DcMotorEx
     val outtake_bucket = OP.hardwareMap.get("outtake_bucket") as Servo
+    val outtake_distance_sensor = OP.hardwareMap.get("outtake_distance_sensor") as DistanceSensor
 
     val carousel = OP.hardwareMap.get("carousel") as DcMotorEx
 

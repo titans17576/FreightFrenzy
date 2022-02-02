@@ -2,6 +2,8 @@ package titans17576.season2022
 
 import com.qualcomm.robotcore.hardware.DcMotor
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.yield
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import titans17576.ftcrc7573.DeferredAsyncOpMode
 import titans17576.ftcrc7573.OP
 
@@ -14,6 +16,7 @@ class Teleop : DeferredAsyncOpMode {
         OP.launch { peripherals_subsystem() }
         OP.launch { endgame_notification_subsystem() }
         OP.launch { balance_bucket_subsystem() }
+        OP.launch { distance_sensor_subsystem()}
     }
 
     suspend fun drive_subsystem(){
@@ -108,6 +111,22 @@ class Teleop : DeferredAsyncOpMode {
 
             }
             OP.telemetry.addData("Bucket position", R.outtake_bucket.position);
+        }
+    }
+
+    suspend fun distance_sensor_subsystem(){
+        OP.start_signal.await()
+        OP.while_live {
+
+            if (R.outtake_distance_sensor.getDistance(DistanceUnit.CM) < 2.5){
+                OP.gamepad1.rumble(0.25, 0.25, 750)
+
+                while(R.outtake_distance_sensor.getDistance(DistanceUnit.CM) > 2.5 && !OP.stop_signal.is_greenlight()){
+                    yield();
+                }
+
+            }
+
         }
     }
 }
