@@ -28,6 +28,7 @@ val ARM_INSIDE: Int = 0;
 val ARM_BUCKET_VROOM: Int = 195;
 val ARM_LEVEL_3: Int = 650;
 val ARM_LEVEL_MAX: Int = 1000;
+val ARM_INSIDE_POWER: Double = -0.255;
 
 val BUCKET_POSITION_LOADING = 0.326
 val BUCKET_POSITION_DUMP = 0.74
@@ -47,7 +48,7 @@ class Robot() {
     val outtake_arm = OP.hardwareMap.get("outtake_arm") as DcMotorEx
     val outtake_bucket = OP.hardwareMap.get("outtake_bucket") as Servo
     val outtake_distance_sensor = OP.hardwareMap.get("outtake_distance_sensor") as DistanceSensor
-
+    val outtake_limit_switch = OP.hardwareMap.get("outtake_arm_limit") as TouchSensor
     val carousel = OP.hardwareMap.get("carousel") as DcMotorEx
 
     init {
@@ -61,6 +62,7 @@ class Robot() {
         left_back.targetPosition = 0;
         right_front.targetPosition = 0;
         right_back.targetPosition = 0;
+
 
         left_front.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         left_back.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER

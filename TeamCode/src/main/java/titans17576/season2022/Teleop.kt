@@ -16,7 +16,8 @@ class Teleop : DeferredAsyncOpMode {
         OP.launch { peripherals_subsystem() }
         OP.launch { endgame_notification_subsystem() }
         OP.launch { balance_bucket_subsystem() }
-        OP.launch { distance_sensor_subsystem()}
+        OP.launch { distance_sensor_subsystem() }
+        OP.launch { outtake_arm_stuff() }
     }
 
     suspend fun drive_subsystem(){
@@ -60,7 +61,6 @@ class Teleop : DeferredAsyncOpMode {
         R.outtake_arm.power = 0.5
 
         var intake_power = 0.0
-        var armposition = 0
         OP.while_live {
             intake_power = 0.0
             intake_power += OP.gamepad1.right_trigger
@@ -68,16 +68,6 @@ class Teleop : DeferredAsyncOpMode {
             R.intake_motor.power = intake_power
 
             R.carousel.power = (OP.gamepad2.left_trigger - OP.gamepad2.right_trigger).toDouble()
-
-            armposition += OP.gamepad2.right_stick_y.toInt()
-            if (OP.gamepad2.b) armposition = ARM_LEVEL_3
-            if (OP.gamepad2.left_bumper) armposition = ARM_INSIDE
-
-            if (R.outtake_arm.currentPosition > ARM_LEVEL_MAX) armposition = ARM_LEVEL_MAX
-            else if (R.outtake_arm.currentPosition < ARM_INSIDE) armposition = ARM_INSIDE
-            R.outtake_arm.targetPosition = armposition
-            OP.telemetry.addData("Arm Position Target", armposition);
-            OP.telemetry.addData("Arm Position Current", R.outtake_arm.currentPosition);
         }
     }
 
@@ -128,5 +118,41 @@ class Teleop : DeferredAsyncOpMode {
             }
 
         }
+    }
+
+
+    suspend fun outtake_arm_stuff(){
+        OP.start_signal.await()
+
+        R.outtake_arm.targetPosition = 0;
+
+        R.outtake_arm.targetPosition = ARM_INSIDE;
+        R.outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION;
+        R.outtake_arm.power = 0.5
+
+        var armposition = 0
+
+        armposition += OP.gamepad2.right_stick_y.toInt()
+
+        if (OP.gamepad2.b) {
+            armposition = ARM_LEVEL_3
+            R.outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION
+        }
+
+        if (OP.gamepad2.left_bumper){
+            R.outtake_arm.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+            R.outtake_arm.power = ARM_INSIDE_POWER
+            while (!R.outtake_limit_switch.isPressed && !OP.stop_signal.is_greenlight()){
+                yield();
+            }
+            R.outtake_arm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+            armposition = ARM_INSIDE
+        }
+
+        if (R.outtake_arm.currentPosition > ARM_LEVEL_MAX) armposition = ARM_LEVEL_MAX
+        else if (R.outtake_arm.currentPosition < ARM_INSIDE) armposition = ARM_INSIDE
+        R.outtake_arm.targetPosition = armposition
+        OP.telemetry.addData("Arm Position Target", armposition);
+        OP.telemetry.addData("Arm Position Current", R.outtake_arm.currentPosition);
     }
 }
