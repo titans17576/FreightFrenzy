@@ -49,6 +49,7 @@ class Teleop : DeferredAsyncOpMode {
             R.right_back.power = (drive - turn + strafe) * slow
             R.right_front.power = (drive - turn - strafe) * slow
         }
+        OP.telemetry.addData("Limit Switch: ", R.outtake_limit_switch.isPressed)
     }
 
     suspend fun peripherals_subsystem() {
