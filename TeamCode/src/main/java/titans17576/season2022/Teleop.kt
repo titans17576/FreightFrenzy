@@ -3,7 +3,6 @@ package titans17576.season2022
 import com.qualcomm.robotcore.hardware.DcMotor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import titans17576.ftcrc7573.DeferredAsyncOpMode
 import titans17576.ftcrc7573.OP
 
@@ -17,7 +16,7 @@ class Teleop : DeferredAsyncOpMode {
         OP.launch { endgame_notification_subsystem() }
         OP.launch { balance_bucket_subsystem() }
         OP.launch { distance_sensor_subsystem() }
-        OP.launch { outtake_arm_stuff() }
+        OP.launch { outtake_arm_subsystem() }
     }
 
     suspend fun drive_subsystem(){
@@ -48,8 +47,9 @@ class Teleop : DeferredAsyncOpMode {
             R.left_front.power = (drive + turn + strafe) * slow
             R.right_back.power = (drive - turn + strafe) * slow
             R.right_front.power = (drive - turn - strafe) * slow
+
+            OP.telemetry.addData("Limit Switch: ", R.outtake_limit_switch.isPressed)
         }
-        OP.telemetry.addData("Limit Switch: ", R.outtake_limit_switch.isPressed)
     }
 
     suspend fun peripherals_subsystem() {
@@ -107,7 +107,7 @@ class Teleop : DeferredAsyncOpMode {
 
     suspend fun distance_sensor_subsystem(){
         OP.start_signal.await()
-        OP.while_live {
+        /*OP.while_live {
 
             if (R.outtake_distance_sensor.getDistance(DistanceUnit.CM) < 2.5){
                 OP.gamepad1.rumble(0.25, 0.25, 750)
@@ -118,42 +118,45 @@ class Teleop : DeferredAsyncOpMode {
 
             }
 
-        }
+        }*/
     }
 
-
-    suspend fun outtake_arm_stuff(){
+    suspend fun outtake_reset() {
+        R.outtake_arm.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        R.outtake_arm.power = ARM_INSIDE_POWER
+        while (!R.outtake_limit_switch.isPressed && !OP.stop_signal.is_greenlight()) {
+            yield();
+        }
+        R.outtake_arm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+    }
+    suspend fun outtake_arm_subsystem() {
         OP.start_signal.await()
 
+        outtake_reset()
         R.outtake_arm.targetPosition = 0;
-
-        R.outtake_arm.targetPosition = ARM_INSIDE;
-        R.outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION;
-        R.outtake_arm.power = 0.5
+        R.outtake_arm.targetPosition = ARM_INSIDE
 
         var armposition = 0
 
-        armposition += OP.gamepad2.right_stick_y.toInt()
+        OP.while_live {
+            armposition += OP.gamepad2.right_stick_y.toInt()
 
-        if (OP.gamepad2.b) {
-            armposition = ARM_LEVEL_3
-            R.outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION
-        }
-
-        if (OP.gamepad2.left_bumper){
-            R.outtake_arm.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-            R.outtake_arm.power = ARM_INSIDE_POWER
-            while (!R.outtake_limit_switch.isPressed && !OP.stop_signal.is_greenlight()){
-                yield();
+            if (OP.gamepad2.b) {
+                armposition = ARM_LEVEL_3
+                R.outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION;
+                R.outtake_arm.power = 0.5
             }
-            R.outtake_arm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-            armposition = ARM_INSIDE
-        }
 
-        if (R.outtake_arm.currentPosition > ARM_LEVEL_MAX) armposition = ARM_LEVEL_MAX
-        else if (R.outtake_arm.currentPosition < ARM_INSIDE) armposition = ARM_INSIDE
-        R.outtake_arm.targetPosition = armposition
-        OP.telemetry.addData("Arm Position Target", armposition);
-        OP.telemetry.addData("Arm Position Current", R.outtake_arm.currentPosition);
+            if (OP.gamepad2.left_bumper) {
+                outtake_reset()
+                armposition = ARM_INSIDE
+            }
+
+            if (R.outtake_arm.currentPosition > ARM_LEVEL_MAX) armposition = ARM_LEVEL_MAX
+            else if (R.outtake_arm.currentPosition < ARM_INSIDE) armposition = ARM_INSIDE
+            R.outtake_arm.targetPosition = armposition
+            OP.telemetry.addData("Arm Position Target", armposition);
+            OP.telemetry.addData("Arm Position Current", R.outtake_arm.currentPosition);
+        }
     }
 }

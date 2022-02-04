@@ -47,7 +47,7 @@ class Robot() {
 
     val outtake_arm = OP.hardwareMap.get("outtake_arm") as DcMotorEx
     val outtake_bucket = OP.hardwareMap.get("outtake_bucket") as Servo
-    val outtake_distance_sensor = OP.hardwareMap.get("outtake_distance_sensor") as DistanceSensor
+    //val outtake_distance_sensor = OP.hardwareMap.get("outtake_distance_sensor") as DistanceSensor
     val outtake_limit_switch = OP.hardwareMap.get("outtake_arm_limit") as TouchSensor
     val carousel = OP.hardwareMap.get("carousel") as DcMotorEx
 
