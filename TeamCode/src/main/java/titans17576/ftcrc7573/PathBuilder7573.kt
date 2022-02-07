@@ -7,6 +7,7 @@ import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryAccelerationConstraint;
 import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryVelocityConstraint;
 import org.firstinspires.ftc.teamcode.drive.Meet2Drive
+import org.firstinspires.ftc.teamcode.drive.RegionalsDrive
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder
 
@@ -34,6 +35,19 @@ fun Meet2Drive.trajectory_builder_factory(): TrajectoryBuilderFactory {
         }
     }
     return MyBuilder()
+}
+
+fun RegionalsDrive.trajectory_builder_factory(): TrajectoryBuilderFactory {
+    val self = this
+    class MyBuilderRegionals : TrajectoryBuilderFactory {
+        override fun make_trajectory_builder(start: Pose2d, reversed: Boolean): TrajectoryBuilder {
+            return self.trajectoryBuilder(start, reversed)
+        }
+        override fun make_trajectory_sequence_builder(start: Pose2d): TrajectorySequenceBuilder {
+            return self.trajectorySequenceBuilder(start)
+        }
+    }
+    return MyBuilderRegionals()
 }
 
 open class PathBuilder7573(initial_pose: Pose2d, factory: TrajectoryBuilderFactory) {

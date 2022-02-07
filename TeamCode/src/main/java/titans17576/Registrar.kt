@@ -13,6 +13,10 @@ fun generated_op_mode_registrar(m: OpModeManager) {
     op_modes_other()
 }
 
+fun freight_frenzy_regionals(){
+    register_defered_async_opmode("/17576/Regionals/Barcode-Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.BarcodeCarouselDepot(true, op)}
+}
+
 fun freight_frenzy_meet_3() {
     register_defered_async_opmode("/17576/LM3/Teleop", false) { op -> titans17576.freightfrenzy.meet2.Teleop(op) }
     register_defered_async_opmode("/17576/LM3/Red/Carousel/Vision-Carousel-Park", true) { op -> titans17576.freightfrenzy.meet3.Auto_StartCarousel_Vision_Carousel_Depo(true, op) }
@@ -26,7 +30,7 @@ fun op_modes_current() {
     register_defered_async_opmode("/7573/CameraTest", false) { op -> titans17576.ftcrc7573.test.CameraTest(op) }
 }
 fun op_modes_other() {
-    freight_frenzy_meet_1()
+    freight_frenzy_regionals()
     ftcrc7573_tests()
 }
 
