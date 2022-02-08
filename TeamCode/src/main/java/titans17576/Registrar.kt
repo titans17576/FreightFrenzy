@@ -57,4 +57,5 @@ fun ftcrc7573_tests() {
     register_defered_async_opmode_legacy("/7573/ServoTest", false, titans17576.ftcrc7573.test.ServoTest::class as KClass<DeferredAsyncOpMode>)
     register_defered_async_opmode_legacy("/7573/DoubleServoTest", false, titans17576.ftcrc7573.test.DoubleServoTest::class as KClass<DeferredAsyncOpMode>)
     register_defered_async_opmode_legacy("/7573/MotorTest", false, titans17576.ftcrc7573.test.MotorTest::class as KClass<DeferredAsyncOpMode>)
+    register_defered_async_opmode("/7573/TouchTest", false) { op -> titans17576.ftcrc7573.test.TouchTest(op) }
 }

@@ -5,6 +5,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
 import titans17576.ftcrc7573.AsyncOpMode
 import titans17576.ftcrc7573.OP
+import titans17576.ftcrc7573.TouchSensor7573
 
 //Variables for holding the cube
 val CLAMP_POS_HOLD_CUBE: Double = 0.47
@@ -25,8 +26,8 @@ val OUTTAKE_POSITION_OUTSIDE_HORIZONTAL: Double = 0.67
 
 
 val ARM_INSIDE: Int = 0;
-val ARM_BUCKET_VROOM: Int = 195;
-val ARM_LEVEL_3: Int = 650;
+val ARM_BUCKET_VROOM: Int = 330;
+val ARM_LEVEL_3: Int = 865;
 val ARM_LEVEL_MAX: Int = 1000;
 val ARM_INSIDE_POWER: Double = -0.255;
 
@@ -48,7 +49,7 @@ class Robot() {
     val outtake_arm = OP.hardwareMap.get("outtake_arm") as DcMotorEx
     val outtake_bucket = OP.hardwareMap.get("outtake_bucket") as Servo
     //val outtake_distance_sensor = OP.hardwareMap.get("outtake_distance_sensor") as DistanceSensor
-    val outtake_limit_switch = OP.hardwareMap.get("outtake_arm_limit") as TouchSensor
+    val outtake_limit_switch = TouchSensor7573(OP.hardwareMap.get("outtake_arm_limit"))
     val carousel = OP.hardwareMap.get("carousel") as DcMotorEx
 
     init {
