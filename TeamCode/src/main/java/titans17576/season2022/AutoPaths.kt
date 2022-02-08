@@ -6,7 +6,7 @@ import titans17576.ftcrc7573.*
 
 class Barcode_Carousel_Park(is_red: Boolean, factory: TrajectoryBuilderFactory)
     : PathBuilder7573(Pose2d(
-    -34.0, //if (is_red) -28.0 else -40.0,
+    -40.0, //if (is_red) -28.0 else -40.0,
     -63.0 * (if (is_red) 1.0 else -1.0),
     90.0.toRadians * (if (is_red) 1.0 else -1.0)
 ), factory) {
@@ -37,8 +37,8 @@ class Barcode_Carousel_Park(is_red: Boolean, factory: TrajectoryBuilderFactory)
             trajectories.add(
                 new_movement()
                     .setReversed(false)
-                    .splineTo(Vector2d(-50.0, -60.0 * side), -180.0.toRadians * side)
-                    .lineTo(Vector2d(-53.0, -60.0 * side))
+                    .splineTo(Vector2d(-55.0, -55.0 * side), -180.0.toRadians * side)
+                    .lineTo(Vector2d(-58.0, -55.0 * side))
                     //.splineTo(Vector2d(40.0, -45.0 * side), 0.0)
                     .build()
             )
