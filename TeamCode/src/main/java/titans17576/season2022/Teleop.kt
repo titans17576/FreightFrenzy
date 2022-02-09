@@ -82,17 +82,29 @@ class Teleop : DeferredAsyncOpMode {
 
     suspend fun balance_bucket_subsystem(){
         OP.start_signal.await()
+        var current_bucket_position = BUCKET_POSITION_LOADING
+
         OP.while_live {
             if (OP.gamepad2.a && Math.abs(ARM_LEVEL_MAX - R.outtake_arm.currentPosition) <= 30){
                 R.outtake_bucket.position = BUCKET_POSITION_DUMP
             }
             else{
-                var current_bucket_position = (((BUCKET_BALANCED-BUCKET_POSITION_LOADING)/(ARM_LEVEL_3 - ARM_BUCKET_VROOM))*(R.outtake_arm.currentPosition - ARM_BUCKET_VROOM)) + BUCKET_POSITION_LOADING
+
+                if (R.outtake_arm.currentPosition <= 250){
+                    current_bucket_position = BUCKET_POSITION_LOADING
+                } else if (R.outtake_arm.currentPosition > 250 && R.outtake_arm.currentPosition < 500) {
+                    current_bucket_position = 0.15
+                } else {
+                    current_bucket_position = BUCKET_BALANCED
+                }
+
+
+                /*current_bucket_position = (((BUCKET_BALANCED-BUCKET_POSITION_LOADING)/(ARM_LEVEL_3 - ARM_BUCKET_VROOM))*(R.outtake_arm.currentPosition - ARM_BUCKET_VROOM)) + BUCKET_POSITION_LOADING
                 if (current_bucket_position > BUCKET_POSITION_LOADING) {
                     current_bucket_position = BUCKET_POSITION_LOADING
                 } else if (current_bucket_position < BUCKET_BALANCED) {
                     current_bucket_position = BUCKET_BALANCED
-                }
+                }*/
                 R.outtake_bucket.position = current_bucket_position
 
             }
@@ -130,7 +142,7 @@ class Teleop : DeferredAsyncOpMode {
         outtake_reset()
         R.outtake_arm.targetPosition = 0;
         R.outtake_arm.targetPosition = ARM_INSIDE
-        val travel_power = 0.5
+        val travel_power = 0.275
 
         var armposition = 0
 
