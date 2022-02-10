@@ -8,14 +8,15 @@ import titans17576.ftcrc7573.OP
 import kotlin.math.absoluteValue
 
 
-class Teleop : DeferredAsyncOpMode {
+class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
     val R = Robot()
 
     override suspend fun op_mode() {
         OP.launch { drive_subsystem() }
         OP.launch { peripherals_subsystem() }
         OP.launch { endgame_notification_subsystem() }
-        OP.launch { balance_bucket_subsystem() }
+        //This will be launched after a successful reset
+        //OP.launch { balance_bucket_subsystem() }
         OP.launch { distance_sensor_subsystem() }
         OP.launch { outtake_arm_subsystem() }
     }
@@ -41,7 +42,7 @@ class Teleop : DeferredAsyncOpMode {
             var turn = OP.gamepad1.right_stick_x.toDouble()
             var strafe = OP.gamepad1.left_stick_x.toDouble()
 
-            val slow = if (OP.gamepad1.right_bumper) 0.4 else 1.0
+            val slow = if (OP.gamepad1.left_bumper || OP.gamepad2.left_bumper ) 0.4 else 1.0
 
             //POV drive (not tank)
             R.left_back.power = (drive + turn - strafe) * slow
@@ -61,9 +62,11 @@ class Teleop : DeferredAsyncOpMode {
             intake_power = 0.0
             intake_power += OP.gamepad1.right_trigger
             intake_power -= OP.gamepad1.left_trigger
+            intake_power += OP.gamepad2.left_stick_y
             R.intake_motor.power = intake_power
 
             R.carousel.power = (OP.gamepad2.left_trigger - OP.gamepad2.right_trigger).toDouble()
+            if (philip) R.carousel.power += (OP.gamepad1.left_trigger - OP.gamepad1.right_trigger).toDouble()
         }
     }
 
@@ -85,11 +88,9 @@ class Teleop : DeferredAsyncOpMode {
         var current_bucket_position = BUCKET_POSITION_LOADING
 
         OP.while_live {
-            if (OP.gamepad2.a && Math.abs(ARM_LEVEL_MAX - R.outtake_arm.currentPosition) <= 30){
+            if ((OP.gamepad2.a || (philip && OP.gamepad1.a) ) /* && Math.abs(ARM_LEVEL_MAX - R.outtake_arm.currentPosition ) <= 30 */) {
                 R.outtake_bucket.position = BUCKET_POSITION_DUMP
-            }
-            else{
-
+            } else {
                 if (R.outtake_arm.currentPosition <= 250){
                     current_bucket_position = BUCKET_POSITION_LOADING
                 } else if (R.outtake_arm.currentPosition > 250 && R.outtake_arm.currentPosition < 500) {
@@ -98,15 +99,7 @@ class Teleop : DeferredAsyncOpMode {
                     current_bucket_position = BUCKET_BALANCED
                 }
 
-
-                /*current_bucket_position = (((BUCKET_BALANCED-BUCKET_POSITION_LOADING)/(ARM_LEVEL_3 - ARM_BUCKET_VROOM))*(R.outtake_arm.currentPosition - ARM_BUCKET_VROOM)) + BUCKET_POSITION_LOADING
-                if (current_bucket_position > BUCKET_POSITION_LOADING) {
-                    current_bucket_position = BUCKET_POSITION_LOADING
-                } else if (current_bucket_position < BUCKET_BALANCED) {
-                    current_bucket_position = BUCKET_BALANCED
-                }*/
                 R.outtake_bucket.position = current_bucket_position
-
             }
             OP.telemetry.addData("Bucket position", R.outtake_bucket.position);
         }
@@ -131,10 +124,17 @@ class Teleop : DeferredAsyncOpMode {
     suspend fun outtake_reset() {
         R.outtake_arm.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         R.outtake_arm.power = ARM_INSIDE_POWER
+        var reset = true;
         while (!R.outtake_limit_switch.is_touched && !OP.stop_signal.is_greenlight()) {
+            if (OP.gamepad2.right_stick_y.absoluteValue > 0.25) {
+                reset = false;
+                OP.gamepad1.rumble(200);
+                OP.gamepad2.rumble(200);
+                break;
+            }
             yield();
         }
-        R.outtake_arm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        if (reset) R.outtake_arm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
     }
     suspend fun outtake_arm_subsystem() {
         OP.start_signal.await()
@@ -143,17 +143,18 @@ class Teleop : DeferredAsyncOpMode {
         R.outtake_arm.targetPosition = 0;
         R.outtake_arm.targetPosition = ARM_INSIDE
         val travel_power = 0.275
+        OP.launch { balance_bucket_subsystem() }
 
         var armposition = 0
 
         OP.while_live {
 
-            if (OP.gamepad2.b) {
+            if (OP.gamepad2.b || (philip && OP.gamepad1.b)) {
                 armposition = ARM_LEVEL_3
                 R.outtake_arm.targetPosition = armposition
                 R.outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION;
                 R.outtake_arm.power = travel_power
-            } else if (OP.gamepad2.right_bumper) {
+            } else if (OP.gamepad2.right_bumper || (philip && OP.gamepad1.right_bumper)) {
                 outtake_reset()
                 armposition = ARM_INSIDE
                 R.outtake_arm.targetPosition = armposition

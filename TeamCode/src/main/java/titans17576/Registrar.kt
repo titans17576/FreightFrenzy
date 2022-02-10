@@ -9,7 +9,8 @@ import kotlin.reflect.KClass
 fun generated_op_mode_registrar(m: OpModeManager) {
     current_op_mode_manager = m
     //op_modes_current()
-    register_defered_async_opmode("/17576/State/Teleop", false) { op -> titans17576.season2022.Teleop() }
+    register_defered_async_opmode("/17576/State/Teleop", false) { op -> titans17576.season2022.Teleop(false) }
+    register_defered_async_opmode("/17576/State/Teleop/Philip", false) { op -> titans17576.season2022.Teleop(true ) }
     op_modes_other()
 }
 
