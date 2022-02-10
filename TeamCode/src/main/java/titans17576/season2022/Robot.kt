@@ -31,7 +31,7 @@ val ARM_LEVEL_3: Int = 775;
 val ARM_LEVEL_MAX: Int = 1000;
 val ARM_INSIDE_POWER: Double = -0.325;
 
-val BUCKET_POSITION_LOADING = 0.326
+val BUCKET_POSITION_LOADING = 0.28
 val BUCKET_POSITION_DUMP = 0.74
 val BUCKET_BALANCED = 0.05
 
@@ -70,6 +70,12 @@ class Robot() {
         right_front.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         right_back.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         outtake_arm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+
+        left_front.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        left_back.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        right_front.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        right_back.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+
         R = this
     }
 }
