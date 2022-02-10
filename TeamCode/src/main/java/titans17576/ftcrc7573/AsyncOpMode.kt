@@ -28,6 +28,28 @@ public abstract class AsyncOpMode : OpMode() {
     }
     fun mk_scope(): CoroutineScope = async_scope
 
+    private class TelemetryStore(var ttl: Int, var content: String)
+    private val telemetry_store = HashMap<String, TelemetryStore>()
+    fun log(name: String, value: Any) {
+        val store = telemetry_store.get(name)
+        if (store != null) {
+            store.content = value.toString()
+            store.ttl = 5
+        } else {
+            telemetry_store.set(name, TelemetryStore(5, value.toString()))
+        }
+    }
+    private fun do_telemetry() {
+        telemetry.clearAll()
+        val items = telemetry_store.iterator()
+        while (items.hasNext()) {
+            val item = items.next()
+            item.value.ttl--;
+            if (item.value.ttl == 0) items.remove()
+            else (telemetry.addData(item.key, item.value.content))
+        }
+        telemetry.update()
+    }
 
     override fun init() {
         dispatcher = AsyncOpModeDispatcher(this)
@@ -41,20 +63,21 @@ public abstract class AsyncOpMode : OpMode() {
             op_mode()
         }
         dispatcher.execute()
-        telemetry.update()
+        telemetry.isAutoClear = false
+        do_telemetry()
     }
     override fun init_loop() {
         dispatcher.execute()
-        telemetry.update()
+        do_telemetry()
     }
     override fun start() {
         launch { start_signal.greenlight() }
         dispatcher.execute()
-        telemetry.update()
+        do_telemetry()
     }
     override fun loop() {
         dispatcher.execute()
-        telemetry.update()
+        do_telemetry()
     }
     override fun stop() {
         launch {
@@ -62,9 +85,9 @@ public abstract class AsyncOpMode : OpMode() {
             stop_signal.greenlight()
         }
         dispatcher.execute()
-        telemetry.update()
+        do_telemetry()
         dispatcher.finish()
-        telemetry.update()
+        do_telemetry()
     }
 
     suspend fun while_live(f: suspend (it: () -> Unit) -> Unit) {

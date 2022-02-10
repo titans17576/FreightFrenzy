@@ -15,8 +15,6 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
         OP.launch { drive_subsystem() }
         OP.launch { peripherals_subsystem() }
         OP.launch { endgame_notification_subsystem() }
-        //This will be launched after a successful reset
-        //OP.launch { balance_bucket_subsystem() }
         OP.launch { distance_sensor_subsystem() }
         OP.launch { outtake_arm_subsystem() }
     }
@@ -31,12 +29,12 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
 
         OP.while_live{
 
-            OP.telemetry.addData("LEFT", OP.gamepad1.left_stick_y)
-            OP.telemetry.addData("RIGHT", OP.gamepad1.right_stick_x)
-            OP.telemetry.addData("left_front", R.left_front.currentPosition)
-            OP.telemetry.addData("left_back", R.left_back.currentPosition)
-            OP.telemetry.addData("right_front", R.right_front.currentPosition)
-            OP.telemetry.addData("right_back", R.right_back.currentPosition)
+            OP.log("LEFT", OP.gamepad1.left_stick_y)
+            OP.log("RIGHT", OP.gamepad1.right_stick_x)
+            OP.log("left_front", R.left_front.currentPosition)
+            OP.log("left_back", R.left_back.currentPosition)
+            OP.log("right_front", R.right_front.currentPosition)
+            OP.log("right_back", R.right_back.currentPosition)
 
             var drive = -OP.gamepad1.left_stick_y.toDouble()
             var turn = OP.gamepad1.right_stick_x.toDouble()
@@ -50,7 +48,7 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
             R.right_back.power = (drive - turn + strafe) * slow
             R.right_front.power = (drive - turn - strafe) * slow
 
-            OP.telemetry.addData("Limit Switch: ", R.outtake_limit_switch.is_touched)
+            OP.log("Limit Switch: ", R.outtake_limit_switch.is_touched)
         }
     }
 
@@ -101,7 +99,7 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
 
                 R.outtake_bucket.position = current_bucket_position
             }
-            OP.telemetry.addData("Bucket position", R.outtake_bucket.position);
+            OP.log("Bucket position", R.outtake_bucket.position);
         }
     }
 
@@ -121,54 +119,39 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
         }*/
     }
 
-    suspend fun outtake_reset() {
-        R.outtake_arm.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-        R.outtake_arm.power = ARM_INSIDE_POWER
-        var reset = true;
-        while (!R.outtake_limit_switch.is_touched && !OP.stop_signal.is_greenlight()) {
-            if (OP.gamepad2.right_stick_y.absoluteValue > 0.25) {
-                reset = false;
-                OP.gamepad1.rumble(200);
-                OP.gamepad2.rumble(200);
-                break;
-            }
-            yield();
-        }
-        if (reset) R.outtake_arm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-    }
     suspend fun outtake_arm_subsystem() {
         OP.start_signal.await()
 
-        outtake_reset()
+        R.reset_outtake()
         R.outtake_arm.targetPosition = 0;
         R.outtake_arm.targetPosition = ARM_INSIDE
-        val travel_power = 0.275
-        OP.launch { balance_bucket_subsystem() }
+        //OP.launch { balance_bucket_subsystem() }
 
         var armposition = 0
 
         OP.while_live {
 
-            if (OP.gamepad2.b || (philip && OP.gamepad1.b)) {
+            var bucket_position: Double? = null
+            if (OP.gamepad2.a || (philip && OP.gamepad1.a)) {
+                bucket_position = BUCKET_POSITION_DUMP
+            }
+
+            val automation_allowed = OP.gamepad2.left_stick_x < 0.75
+            if ((OP.gamepad2.b || (philip && OP.gamepad1.b)) && automation_allowed) {
                 armposition = ARM_LEVEL_3
-                R.outtake_arm.targetPosition = armposition
-                R.outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION;
-                R.outtake_arm.power = travel_power
-            } else if (OP.gamepad2.right_bumper || (philip && OP.gamepad1.right_bumper)) {
-                outtake_reset()
+            } else if ((OP.gamepad2.right_bumper || (philip && OP.gamepad1.right_bumper)) && automation_allowed) {
+                R.command_outtake(0)
+                R.reset_outtake()
                 armposition = ARM_INSIDE
-                R.outtake_arm.targetPosition = armposition
-            } else if (OP.gamepad2.right_stick_y.absoluteValue > 0.25) {
+            } else /*if (OP.gamepad2.right_stick_y.absoluteValue > 0.25)*/ {
                 armposition += (OP.gamepad2.right_stick_y * 10).toInt()
                 if (R.outtake_arm.currentPosition > ARM_LEVEL_MAX) armposition = ARM_LEVEL_MAX
                 else if (R.outtake_arm.currentPosition < ARM_INSIDE) armposition = ARM_INSIDE
-                R.outtake_arm.targetPosition = armposition
-                R.outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION;
-                R.outtake_arm.power = travel_power
             }
+            R.command_outtake(armposition, bucket_position)
 
-            OP.telemetry.addData("Arm Position Target", armposition);
-            OP.telemetry.addData("Arm Position Current", R.outtake_arm.currentPosition);
+            OP.log("Arm Position Target", armposition);
+            OP.log("Arm Position Current", R.outtake_arm.currentPosition);
         }
     }
 }

@@ -2,10 +2,11 @@ package titans17576.season2022
 
 import com.qualcomm.robotcore.hardware.*
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.yield
-import titans17576.ftcrc7573.AsyncOpMode
 import titans17576.ftcrc7573.OP
 import titans17576.ftcrc7573.TouchSensor7573
+import kotlin.math.absoluteValue
 
 //Variables for holding the cube
 val CLAMP_POS_HOLD_CUBE: Double = 0.47
@@ -26,12 +27,16 @@ val OUTTAKE_POSITION_OUTSIDE_HORIZONTAL: Double = 0.67
 
 
 val ARM_INSIDE: Int = 0;
-val ARM_BUCKET_VROOM: Int = 330;
+val ARM_BUCKET_TRANSITION_RISING = 200;
+val ARM_BUCKET_TRANSITION_LOWERING = 550;
 val ARM_LEVEL_3: Int = 775;
 val ARM_LEVEL_MAX: Int = 1000;
 val ARM_INSIDE_POWER: Double = -0.325;
+val ARM_POWER_COMMAND = 0.7
 
 val BUCKET_POSITION_LOADING = 0.28
+val BUCKET_POSITION_TRANSITION_RISING = 0.18
+val BUCKET_POSITION_TRANSITION_LOWERING = 0.185
 val BUCKET_POSITION_DUMP = 0.74
 val BUCKET_BALANCED = 0.05
 
@@ -77,5 +82,72 @@ class Robot() {
         right_back.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
 
         R = this
+    }
+
+    val arm_lock: Semaphore = Semaphore(1)
+    suspend fun command_outtake(target: Int, bucket_position: Double? = null, delay_ms: Long = 200, threshold: Int = 10, predicate: () -> Boolean = { true }) {
+        arm_lock.acquire()
+        try {
+            if ((outtake_arm.currentPosition - target).absoluteValue < threshold) return;
+            if (R.outtake_limit_switch.is_touched) {
+                R.outtake_arm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+            }
+
+            suspend fun wait_for_arm() {
+                while ((outtake_arm.currentPosition - outtake_arm.targetPosition).absoluteValue > threshold && OP.gamepad2.left_stick_x < 0.75) {
+                    if (OP.stop_signal.is_greenlight() || !predicate()) return;
+                    yield();
+                }
+            }
+
+            val is_rising = target > ARM_BUCKET_TRANSITION_RISING && outtake_arm.currentPosition <= ARM_BUCKET_TRANSITION_RISING
+            val is_falling = target < ARM_BUCKET_TRANSITION_LOWERING && outtake_arm.currentPosition >= ARM_BUCKET_TRANSITION_LOWERING
+            if (is_rising || is_falling) {
+                val transition_arm_target = if (is_rising) { ARM_BUCKET_TRANSITION_RISING } else { ARM_BUCKET_TRANSITION_LOWERING }
+                val transition_bucket_target = if (is_rising) { BUCKET_POSITION_TRANSITION_RISING } else { BUCKET_POSITION_TRANSITION_LOWERING }
+
+                outtake_arm.targetPosition = transition_arm_target
+                outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION
+                outtake_arm.power = ARM_POWER_COMMAND
+                wait_for_arm()
+                delay(delay_ms)
+                if (OP.stop_signal.is_greenlight() || !predicate()) return;
+                outtake_bucket.position = transition_bucket_target
+                delay(delay_ms)
+            }
+            outtake_arm.targetPosition = target
+            outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION
+            outtake_arm.power = ARM_POWER_COMMAND
+            wait_for_arm()
+            if (OP.stop_signal.is_greenlight() || !predicate()) return;
+            val real_bucket_position: Double
+            if (bucket_position == null) {
+                if (target < ARM_BUCKET_TRANSITION_RISING) real_bucket_position = BUCKET_POSITION_LOADING
+                else real_bucket_position = BUCKET_BALANCED
+            } else {
+                real_bucket_position = bucket_position
+            }
+            outtake_bucket.position = real_bucket_position
+            delay(delay_ms)
+        } finally {
+            arm_lock.release()
+        }
+    }
+
+    suspend fun reset_outtake(bucket_controls: Boolean = true) {
+        R.outtake_arm.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+        R.outtake_arm.power = ARM_INSIDE_POWER
+        var reset = true;
+        while (!R.outtake_limit_switch.is_touched && !OP.stop_signal.is_greenlight() && OP.gamepad2.left_stick_x < 0.75) {
+            if (bucket_controls) R.outtake_bucket.position += OP.gamepad2.left_stick_y / 200;
+            if (OP.gamepad2.right_stick_y.absoluteValue > 0.25) {
+                reset = false;
+                OP.gamepad1.rumble(200);
+                OP.gamepad2.rumble(200);
+                break;
+            }
+            yield();
+        }
+        if (reset) R.outtake_arm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
     }
 }

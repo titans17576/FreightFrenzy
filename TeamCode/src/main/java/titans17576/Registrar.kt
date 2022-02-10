@@ -11,6 +11,7 @@ fun generated_op_mode_registrar(m: OpModeManager) {
     //op_modes_current()
     register_defered_async_opmode("/17576/State/Teleop", false) { op -> titans17576.season2022.Teleop(false) }
     register_defered_async_opmode("/17576/State/Teleop/Philip", false) { op -> titans17576.season2022.Teleop(true ) }
+    register_defered_async_opmode("/7573/ArmBucketTest", false) { titans17576.season2022.ArmBucketTest() }
     op_modes_other()
 }
 
