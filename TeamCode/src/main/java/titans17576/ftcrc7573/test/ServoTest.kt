@@ -9,7 +9,7 @@ import titans17576.ftcrc7573.DeferredAsyncOpMode
 
 class ServoTest(op: AsyncOpMode) : DeferredAsyncOpMode {
     val op = op
-    var servoright: Servo? = op.hardwareMap["servo"] as Servo
+    var servoright: Servo? = op.hardwareMap["outtake_bucket"] as Servo
     var servoname = ""
     //val servoleft = op.hardwareMap["outtake_left"] as Servo
     var position = 0.0
