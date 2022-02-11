@@ -16,7 +16,11 @@ fun generated_op_mode_registrar(m: OpModeManager) {
 }
 
 fun freight_frenzy_regionals(){
-    register_defered_async_opmode("/17576/Regionals/Barcode-Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.BarcodeCarouselDepot(true, op)}
+    register_defered_async_opmode("/17576/Regionals/Red/Barcode-Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.BarcodeCarouselDepot(true, op)}
+    register_defered_async_opmode("/17576/Regionals/Blue/Barcode-Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.BarcodeCarouselDepot(false, op)}
+    register_defered_async_opmode("/17576/Regionals/Red/Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.CarouselDepot(true, op)}
+    register_defered_async_opmode("/17576/Regionals/Blue/Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.CarouselDepot(false, op)}
+
 }
 
 fun freight_frenzy_meet_3() {
