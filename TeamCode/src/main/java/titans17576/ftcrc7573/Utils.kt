@@ -27,6 +27,15 @@ class Either<L: Any, R: Any> private constructor(is_left: Boolean, obj: Any) {
 val Double.toRadians: Double
     get() = this/180*Math.PI
 
+class TouchSensor7573(channel: DigitalChannel) {
+    constructor(hardwareDevice: HardwareDevice) : this(hardwareDevice as DigitalChannel)
+    val channel = channel;
+    init {
+        channel.mode = DigitalChannel.Mode.INPUT
+    }
+    val is_touched: Boolean get() = !channel.state
+}
+
 class MotorReversedEncoder(motor: DcMotorEx) : DcMotorEx {
     val motor = motor
 

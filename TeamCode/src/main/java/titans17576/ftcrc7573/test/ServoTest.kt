@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.TouchSensor
 import kotlinx.coroutines.delay
 import titans17576.ftcrc7573.AsyncOpMode
 import titans17576.ftcrc7573.DeferredAsyncOpMode
+import titans17576.ftcrc7573.TouchSensor7573
 
 class ServoTest(op: AsyncOpMode) : DeferredAsyncOpMode {
     val op = op
@@ -72,11 +73,11 @@ class ServoTest(op: AsyncOpMode) : DeferredAsyncOpMode {
 
 class TouchTest(op: AsyncOpMode) : DeferredAsyncOpMode {
     val op = op
-    val touchSensor = op.hardwareMap["lift_limit"] as TouchSensor
+    val touchSensor = TouchSensor7573(op.hardwareMap["outtake_arm_limit"])// as TouchSensor
     override suspend fun op_mode() {
         op.start_signal.await()
         op.while_live {
-            op.telemetry.addData("Touch Sensor Pressed", touchSensor.isPressed)
+            op.telemetry.addData("Touch Sensor Pressed", touchSensor.is_touched)
             op.telemetry.update()
         }
     }

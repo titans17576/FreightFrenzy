@@ -47,11 +47,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import titans17576.ftcrc7573.Trajectoryable;
+
 /*
  * Simple mecanum drive hardware implementation for REV hardware.
  */
 @Config
-public class RegionalsDrive extends MecanumDrive {
+public class RegionalsDrive extends MecanumDrive implements Trajectoryable {
     public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(6, 0, 0.5);
     public static PIDCoefficients HEADING_PID = new PIDCoefficients(9, 0, 0.2);
 

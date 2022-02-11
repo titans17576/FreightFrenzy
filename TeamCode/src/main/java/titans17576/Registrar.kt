@@ -9,8 +9,14 @@ import kotlin.reflect.KClass
 fun generated_op_mode_registrar(m: OpModeManager) {
     current_op_mode_manager = m
     //op_modes_current()
-    register_defered_async_opmode("/17576/State/Teleop", false) { op -> titans17576.season2022.Teleop() }
+    register_defered_async_opmode("/17576/State/Teleop", false) { op -> titans17576.season2022.Teleop(false) }
+    register_defered_async_opmode("/17576/State/Teleop/Philip", false) { op -> titans17576.season2022.Teleop(true ) }
+    register_defered_async_opmode("/7573/ArmBucketTest", false) { titans17576.season2022.ArmBucketTest() }
     op_modes_other()
+}
+
+fun freight_frenzy_regionals(){
+    register_defered_async_opmode("/17576/Regionals/Barcode-Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.BarcodeCarouselDepot(true, op)}
 }
 
 fun freight_frenzy_meet_3() {
@@ -26,7 +32,7 @@ fun op_modes_current() {
     register_defered_async_opmode("/7573/CameraTest", false) { op -> titans17576.ftcrc7573.test.CameraTest(op) }
 }
 fun op_modes_other() {
-    freight_frenzy_meet_1()
+    freight_frenzy_regionals()
     ftcrc7573_tests()
 }
 
@@ -53,4 +59,5 @@ fun ftcrc7573_tests() {
     register_defered_async_opmode_legacy("/7573/ServoTest", false, titans17576.ftcrc7573.test.ServoTest::class as KClass<DeferredAsyncOpMode>)
     register_defered_async_opmode_legacy("/7573/DoubleServoTest", false, titans17576.ftcrc7573.test.DoubleServoTest::class as KClass<DeferredAsyncOpMode>)
     register_defered_async_opmode_legacy("/7573/MotorTest", false, titans17576.ftcrc7573.test.MotorTest::class as KClass<DeferredAsyncOpMode>)
+    register_defered_async_opmode("/7573/TouchTest", false) { op -> titans17576.ftcrc7573.test.TouchTest(op) }
 }
