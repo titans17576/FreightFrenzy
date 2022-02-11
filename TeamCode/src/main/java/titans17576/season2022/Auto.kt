@@ -1,17 +1,12 @@
 package titans17576.freightfrenzy.Regionals
 
-import com.qualcomm.robotcore.hardware.CRServo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
-import org.firstinspires.ftc.teamcode.drive.Meet2Drive
 import org.firstinspires.ftc.teamcode.drive.RegionalsDrive
 import titans17576.freightfrenzy.meet2.Barcode
-import titans17576.freightfrenzy.meet2.OuttakeController
 import titans17576.freightfrenzy.meet2.camera_disable
 import titans17576.freightfrenzy.meet2.camera_init
 
-import titans17576.freightfrenzy.meet3.AutoBase
-import titans17576.freightfrenzy.meet3.Path_StartCarousel_Vision_Carousel_Depo
 import titans17576.ftcrc7573.AsyncOpMode
 import titans17576.ftcrc7573.DeferredAsyncOpMode
 import titans17576.ftcrc7573.follow_trajectory_sequence
@@ -28,7 +23,7 @@ abstract class AutoBase(op: AsyncOpMode) : DeferredAsyncOpMode {
 suspend fun get_grasshopper_location(op: AsyncOpMode, scope: CoroutineScope): Barcode {
     val feed = camera_init(op)
     try {
-        op.start_signal.await()
+        op.start_event.await()
         return feed.get_next(scope)
     } finally {
         camera_disable(op)
@@ -52,7 +47,7 @@ class BarcodeCarouselDepot(is_red: Boolean, op: AsyncOpMode) : titans17576.freig
         bot.poseEstimate = path.initial_pose
 
         //val barcode_eventually = op.async { get_grasshopper_location(op, this) }
-        op.start_signal.await()
+        op.start_event.await()
         //val barcode = barcode_eventually.await()
 
         //drive to hub
@@ -79,7 +74,7 @@ class CarouselDepot(is_red: Boolean, op: AsyncOpMode) : titans17576.freightfrenz
         bot.poseEstimate = path.initial_pose
 
         //val barcode_eventually = op.async { get_grasshopper_location(op, this) }
-        op.start_signal.await()
+        op.start_event.await()
         //val barcode = barcode_eventually.await()
 
         //drive to carousel

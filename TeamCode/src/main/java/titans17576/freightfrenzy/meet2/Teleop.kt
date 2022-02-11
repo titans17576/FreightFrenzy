@@ -41,7 +41,7 @@ class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
         op.launch { philip_button_subsystem() }
     }
     suspend fun drive_subsystem(){
-        op.start_signal.await()
+        op.start_event.await()
 
         left_front.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         left_back.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
@@ -77,7 +77,7 @@ class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
         val lock_pos_go: Double = 0.36
         lock_servo.position = lock_pos_locked
 
-        op.start_signal.await()
+        op.start_event.await()
 
         lock_servo.position = lock_pos_go
 
@@ -102,7 +102,7 @@ class Teleop(op: AsyncOpMode) : DeferredAsyncOpMode {
 
 
     suspend fun philip_button_subsystem() {
-        op.start_signal.await()
+        op.start_event.await()
         op.while_live {
             if (op.gamepad1.x) {
                 lock_servo.position = 0.0
@@ -134,7 +134,7 @@ class OuttakeController(op: AsyncOpMode, manual_controls_enabled: Boolean) {
     suspend fun teleop_subsystem(philip: Boolean) {
         lift_left.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         lift_right.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        op.start_signal.await()
+        op.start_event.await()
         op.while_live {
 
             if(op.gamepad2.x || (philip && op.gamepad1.x)) {
@@ -179,7 +179,7 @@ class OuttakeController(op: AsyncOpMode, manual_controls_enabled: Boolean) {
         lift_right.mode = DcMotor.RunMode.RUN_TO_POSITION;
         lift_left.power = -lift_power;
         lift_right.power = -lift_power;
-        while (!op.stop_signal.is_greenlight() && lift_left.currentPosition - 10 > lift_left.targetPosition && (!op.gamepad2.left_bumper && manual_controls_enabled)) {
+        while (!op.stop_event.has_fired() && lift_left.currentPosition - 10 > lift_left.targetPosition && (!op.gamepad2.left_bumper && manual_controls_enabled)) {
             yield()
             op.telemetry.addData("Cool", lift_left.currentPosition)
         }
@@ -198,7 +198,7 @@ class OuttakeController(op: AsyncOpMode, manual_controls_enabled: Boolean) {
         lift_right.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         lift_left.power = lift_power
         lift_right.power = lift_power
-        while (!op.stop_signal.is_greenlight() && !lift_limit.isPressed()) {
+        while (!op.stop_event.has_fired() && !lift_limit.isPressed()) {
             yield()
         }
         lift_left.power = 0.0

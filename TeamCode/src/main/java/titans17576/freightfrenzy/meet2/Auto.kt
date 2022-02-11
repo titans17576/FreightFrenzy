@@ -57,7 +57,7 @@ abstract class AutoBase(op: AsyncOpMode): DeferredAsyncOpMode {
         right_front.power = power
         right_back.power = power
 
-        while (left_front.isBusy && left_back.isBusy && right_front.isBusy && right_back.isBusy == true && !op.stop_signal.is_greenlight()) {
+        while (left_front.isBusy && left_back.isBusy && right_front.isBusy && right_back.isBusy == true && !op.stop_event.has_fired()) {
             yield()
             op.telemetry.addData("LeftFront", left_front.currentPosition)
             op.telemetry.addData("LeftBack", left_back.currentPosition)
@@ -94,7 +94,7 @@ abstract class AutoBase(op: AsyncOpMode): DeferredAsyncOpMode {
         right_front.power = power
         right_back.power = power
 
-        while (left_front.isBusy && left_back.isBusy && right_front.isBusy && right_back.isBusy == true && !op.stop_signal.is_greenlight()) {
+        while (left_front.isBusy && left_back.isBusy && right_front.isBusy && right_back.isBusy == true && !op.stop_event.has_fired()) {
             yield()
             op.telemetry.addData("LeftFront", left_front.currentPosition)
             op.telemetry.addData("LeftBack", left_back.currentPosition)
@@ -136,7 +136,7 @@ abstract class AutoBase(op: AsyncOpMode): DeferredAsyncOpMode {
         lift_right.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         lift_left.power = 0.6
         lift_right.power = 0.6
-        while (!op.stop_signal.is_greenlight() && !lift_limit.isPressed()) {
+        while (!op.stop_event.has_fired() && !lift_limit.isPressed()) {
             yield()
         }
         lift_left.power = 0.0
@@ -159,7 +159,7 @@ abstract class AutoBase(op: AsyncOpMode): DeferredAsyncOpMode {
         lift_right.mode = DcMotor.RunMode.RUN_TO_POSITION;
         lift_left.power = -0.5;
         lift_right.power = -0.5;
-        while (!op.stop_signal.is_greenlight() && lift_left.currentPosition - 10 > lift_left.targetPosition && !op.gamepad2.left_bumper) {
+        while (!op.stop_event.has_fired() && lift_left.currentPosition - 10 > lift_left.targetPosition && !op.gamepad2.left_bumper) {
             yield()
             op.telemetry.addData("Cool", lift_left.currentPosition)
 
@@ -179,7 +179,7 @@ abstract class AutoBase(op: AsyncOpMode): DeferredAsyncOpMode {
 
 public class AutoNoCarouselRed(op: AsyncOpMode) : AutoBase(op) {
     override suspend fun op_mode() {
-        op.start_signal.await()
+        op.start_event.await()
         drive(-500, 0.2)
         turn(250,0.2)
         drive(-500, 0.2)
@@ -191,7 +191,7 @@ public class AutoNoCarouselRed(op: AsyncOpMode) : AutoBase(op) {
 
 public class AutoCarouselBlue(op: AsyncOpMode) : AutoBase(op) {
     override suspend fun op_mode() {
-        op.start_signal.await()
+        op.start_event.await()
         drive(DriveConstants.inchesToTicks(8.0), 0.4)
         carousel.power = 1.0
         delay(5000)
@@ -204,7 +204,7 @@ public class AutoCarouselBlue(op: AsyncOpMode) : AutoBase(op) {
 
 public class ParkCloseBlue(op: AsyncOpMode): AutoBase(op) {
     override suspend fun op_mode() {
-        op.start_signal.await()
+        op.start_event.await()
         drive(DriveConstants.inchesToTicks(24.0 * 0.75), 0.4)
         turn(-500, 0.4)
         drive(DriveConstants.inchesToTicks(24.0 * 2), 0.8)
@@ -212,7 +212,7 @@ public class ParkCloseBlue(op: AsyncOpMode): AutoBase(op) {
 }
 public class ParkFarBlue(op: AsyncOpMode): AutoBase(op) {
     override suspend fun op_mode() {
-        op.start_signal.await()
+        op.start_event.await()
         drive(DriveConstants.inchesToTicks(24.0), 0.4)
         turn(500, 0.4)
         drive(DriveConstants.inchesToTicks(24.0), 0.4)
@@ -220,7 +220,7 @@ public class ParkFarBlue(op: AsyncOpMode): AutoBase(op) {
 }
 public class ParkFarRed(op: AsyncOpMode): AutoBase(op) {
     override suspend fun op_mode() {
-        op.start_signal.await()
+        op.start_event.await()
         drive(DriveConstants.inchesToTicks(24.0), 0.4)
         turn(-500, 0.4)
         drive(DriveConstants.inchesToTicks(24.0), 0.4)
@@ -228,7 +228,7 @@ public class ParkFarRed(op: AsyncOpMode): AutoBase(op) {
 }
 public class ParkCloseRed(op: AsyncOpMode): AutoBase(op) {
     override suspend fun op_mode() {
-        op.start_signal.await()
+        op.start_event.await()
         drive(DriveConstants.inchesToTicks(24.0 * 0.75), 0.4)
         turn(500, 0.4)
         drive(DriveConstants.inchesToTicks(24.0 * 2), 0.8)
@@ -236,7 +236,7 @@ public class ParkCloseRed(op: AsyncOpMode): AutoBase(op) {
 }
 public class DriveForawardAuto(op: AsyncOpMode) : AutoBase(op) {
     override suspend fun op_mode() {
-        op.start_signal.await()
+        op.start_event.await()
         drive(DriveConstants.inchesToTicks(24.0 * 3), 0.8);
     }
 }

@@ -14,7 +14,7 @@ import titans17576.season2022.*
 suspend fun get_grasshopper_location(op: AsyncOpMode, scope: CoroutineScope): Barcode {
     val feed = camera_init(op)
     try {
-        op.start_signal.await()
+        op.start_event.await()
         return feed.get_next(scope)
     } finally {
         camera_disable(op)
@@ -45,7 +45,7 @@ class Auto_StartCarousel_Vision_Carousel_Depo(is_red: Boolean, op: AsyncOpMode) 
         val outtake = OuttakeController(op, false)
 
         val barcode_eventually = op.async { get_grasshopper_location(op, this) }
-        op.start_signal.await()
+        op.start_event.await()
         outtake.intake_servo.position = CLAMP_POS_HOLD_CUBE
         val barcode = barcode_eventually.await()
         outtake.intake_servo.position = CLAMP_POS_HOLD_CUBE
@@ -89,7 +89,7 @@ class Auto_StartWarehouse_Vision_Depo(is_red: Boolean, op: AsyncOpMode) : AutoBa
         val outtake = OuttakeController(op, false)
 
         val barcode_eventually = op.async { get_grasshopper_location(op, this) }
-        op.start_signal.await()
+        op.start_event.await()
         outtake.intake_servo.position = CLAMP_POS_HOLD_CUBE
         val barcode = barcode_eventually.await()
         outtake.intake_servo.position = CLAMP_POS_HOLD_CUBE

@@ -14,8 +14,8 @@ lateinit var OP: AsyncOpMode;
 
 public abstract class AsyncOpMode : OpMode() {
     abstract suspend fun op_mode()
-    lateinit var start_signal: Signal;
-    lateinit var stop_signal: Signal;
+    lateinit var start_event: Event;
+    lateinit var stop_event: Event;
 
     private lateinit var dispatcher: AsyncOpModeDispatcher
     private lateinit var exception_handler: ExceptionHandler
@@ -55,8 +55,8 @@ public abstract class AsyncOpMode : OpMode() {
         dispatcher = AsyncOpModeDispatcher(this)
         exception_handler = ExceptionHandler(dispatcher)
         async_scope = CoroutineScope(EmptyCoroutineContext + dispatcher + exception_handler)
-        start_signal = Signal()
-        stop_signal = Signal()
+        start_event = Event()
+        stop_event = Event()
         OP = this
         launch {
             yield()
@@ -71,7 +71,7 @@ public abstract class AsyncOpMode : OpMode() {
         do_telemetry()
     }
     override fun start() {
-        launch { start_signal.greenlight() }
+        launch { start_event.fire() }
         dispatcher.execute()
         do_telemetry()
     }
@@ -81,8 +81,8 @@ public abstract class AsyncOpMode : OpMode() {
     }
     override fun stop() {
         launch {
-            start_signal.blow_up_everything(Exception("Op Mode Stopped"))
-            stop_signal.greenlight()
+            start_event.throw_exception(Exception("Op Mode Stopped"))
+            stop_event.fire()
         }
         dispatcher.execute()
         do_telemetry()
@@ -92,7 +92,7 @@ public abstract class AsyncOpMode : OpMode() {
 
     suspend fun while_live(f: suspend (it: () -> Unit) -> Unit) {
         var cancelled = false
-        while (start_signal.is_greenlight() && !stop_signal.is_greenlight()) {
+        while (start_event.has_fired() && !stop_event.has_fired()) {
             f { cancelled = true }
             if (cancelled) break
             yield()

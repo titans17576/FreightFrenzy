@@ -2,10 +2,8 @@ package titans17576.season2022
 
 import com.qualcomm.robotcore.hardware.DcMotor
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.yield
 import titans17576.ftcrc7573.DeferredAsyncOpMode
 import titans17576.ftcrc7573.OP
-import kotlin.math.absoluteValue
 
 
 class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
@@ -20,7 +18,7 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
     }
 
     suspend fun drive_subsystem(){
-        OP.start_signal.await()
+        OP.start_event.await()
 
         R.left_front.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         R.left_back.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
@@ -53,7 +51,7 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
     }
 
     suspend fun peripherals_subsystem() {
-        OP.start_signal.await()
+        OP.start_event.await()
 
         var intake_power = 0.0
         OP.while_live {
@@ -69,7 +67,7 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
     }
 
     suspend fun endgame_notification_subsystem() {
-        OP.start_signal.await()
+        OP.start_event.await()
         delay(80000)
         OP.gamepad1.rumble(0.25, 0.25, 750)
         OP.gamepad2.rumble(0.25, 0.25, 750)
@@ -82,15 +80,15 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
     }
 
     suspend fun balance_bucket_subsystem(){
-        OP.start_signal.await()
-        var current_bucket_position = BUCKET_POSITION_LOADING
+        OP.start_event.await()
+        var current_bucket_position = BUCKET_LOADING
 
         OP.while_live {
             if ((OP.gamepad2.a || (philip && OP.gamepad1.a) ) /* && Math.abs(ARM_LEVEL_MAX - R.outtake_arm.currentPosition ) <= 30 */) {
-                R.outtake_bucket.position = BUCKET_POSITION_DUMP
+                R.outtake_bucket.position = BUCKET_DUMP
             } else {
                 if (R.outtake_arm.currentPosition <= 250){
-                    current_bucket_position = BUCKET_POSITION_LOADING
+                    current_bucket_position = BUCKET_LOADING
                 } else if (R.outtake_arm.currentPosition > 250 && R.outtake_arm.currentPosition < 500) {
                     current_bucket_position = 0.15
                 } else {
@@ -104,7 +102,7 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
     }
 
     suspend fun distance_sensor_subsystem(){
-        OP.start_signal.await()
+        OP.start_event.await()
         /*OP.while_live {
 
             if (R.outtake_distance_sensor.getDistance(DistanceUnit.CM) < 2.5){
@@ -120,11 +118,11 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
     }
 
     suspend fun outtake_arm_subsystem() {
-        OP.start_signal.await()
+        OP.start_event.await()
 
         R.reset_outtake()
         R.outtake_arm.targetPosition = 0;
-        R.outtake_arm.targetPosition = ARM_INSIDE
+        R.outtake_arm.targetPosition = ARM_LOADING
         //OP.launch { balance_bucket_subsystem() }
 
         var armposition = 0
@@ -133,7 +131,7 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
 
             var bucket_position: Double? = null
             if (OP.gamepad2.a || (philip && OP.gamepad1.a)) {
-                bucket_position = BUCKET_POSITION_DUMP
+                bucket_position = BUCKET_DUMP
             }
 
             val automation_allowed = OP.gamepad2.left_stick_x < 0.75
@@ -142,11 +140,11 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
             } else if ((OP.gamepad2.right_bumper || (philip && OP.gamepad1.right_bumper)) && automation_allowed) {
                 R.command_outtake(0)
                 R.reset_outtake()
-                armposition = ARM_INSIDE
+                armposition = ARM_LOADING
             } else /*if (OP.gamepad2.right_stick_y.absoluteValue > 0.25)*/ {
                 armposition += (OP.gamepad2.right_stick_y * 10).toInt()
                 if (R.outtake_arm.currentPosition > ARM_LEVEL_MAX) armposition = ARM_LEVEL_MAX
-                else if (R.outtake_arm.currentPosition < ARM_INSIDE) armposition = ARM_INSIDE
+                else if (R.outtake_arm.currentPosition < ARM_LOADING) armposition = ARM_LOADING
             }
             R.command_outtake(armposition, bucket_position)
 

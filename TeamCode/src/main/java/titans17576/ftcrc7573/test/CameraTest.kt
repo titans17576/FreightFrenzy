@@ -1,6 +1,5 @@
 package titans17576.ftcrc7573.test
 
-import com.acmerobotics.dashboard.FtcDashboard
 import titans17576.freightfrenzy.meet2.camera_init
 import titans17576.ftcrc7573.AsyncOpMode
 import titans17576.ftcrc7573.DeferredAsyncOpMode
@@ -16,6 +15,6 @@ class CameraTest(op: AsyncOpMode) : DeferredAsyncOpMode {
             }
         }
         throw RuntimeException("EXPLODE!!!!")
-        op.stop_signal.await()
+        op.stop_event.await()
     }
 }

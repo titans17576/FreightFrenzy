@@ -26,18 +26,18 @@ val OUTTAKE_POSITION_OUTSIDE: Double = 0.57
 val OUTTAKE_POSITION_OUTSIDE_HORIZONTAL: Double = 0.67
 
 
-val ARM_INSIDE: Int = 0;
-val ARM_BUCKET_TRANSITION_RISING = 200;
-val ARM_BUCKET_TRANSITION_LOWERING = 550;
+val ARM_LOADING: Int = 0;
+val ARM_TRANSITION_RISING = 200;
+val ARM_TRANSITION_LOWERING = 550;
 val ARM_LEVEL_3: Int = 775;
 val ARM_LEVEL_MAX: Int = 1000;
-val ARM_INSIDE_POWER: Double = -0.325;
+val ARM_POWER_RESET: Double = -0.325;
 val ARM_POWER_COMMAND = 0.7
 
-val BUCKET_POSITION_LOADING = 0.28
-val BUCKET_POSITION_TRANSITION_RISING = 0.18
-val BUCKET_POSITION_TRANSITION_LOWERING = 0.185
-val BUCKET_POSITION_DUMP = 0.74
+val BUCKET_LOADING = 0.28
+val BUCKET_TRANSITION_RISING = 0.18
+val BUCKET_TRANSITION_LOWERING = 0.185
+val BUCKET_DUMP = 0.74
 val BUCKET_BALANCED = 0.05
 
 lateinit var R: Robot
@@ -95,23 +95,23 @@ class Robot() {
 
             suspend fun wait_for_arm() {
                 while ((outtake_arm.currentPosition - outtake_arm.targetPosition).absoluteValue > threshold && OP.gamepad2.left_stick_x < 0.75) {
-                    if (OP.stop_signal.is_greenlight() || !predicate()) return;
+                    if (OP.stop_event.has_fired() || !predicate()) return;
                     yield();
                 }
             }
 
-            val is_rising = target > ARM_BUCKET_TRANSITION_RISING && outtake_arm.currentPosition <= ARM_BUCKET_TRANSITION_RISING
-            val is_falling = target < ARM_BUCKET_TRANSITION_LOWERING && outtake_arm.currentPosition >= ARM_BUCKET_TRANSITION_LOWERING
+            val is_rising = target > ARM_TRANSITION_RISING && outtake_arm.currentPosition <= ARM_TRANSITION_RISING
+            val is_falling = target < ARM_TRANSITION_LOWERING && outtake_arm.currentPosition >= ARM_TRANSITION_LOWERING
             if (is_rising || is_falling) {
-                val transition_arm_target = if (is_rising) { ARM_BUCKET_TRANSITION_RISING } else { ARM_BUCKET_TRANSITION_LOWERING }
-                val transition_bucket_target = if (is_rising) { BUCKET_POSITION_TRANSITION_RISING } else { BUCKET_POSITION_TRANSITION_LOWERING }
+                val transition_arm_target = if (is_rising) { ARM_TRANSITION_RISING } else { ARM_TRANSITION_LOWERING }
+                val transition_bucket_target = if (is_rising) { BUCKET_TRANSITION_RISING } else { BUCKET_TRANSITION_LOWERING }
 
                 outtake_arm.targetPosition = transition_arm_target
                 outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION
                 outtake_arm.power = ARM_POWER_COMMAND
                 wait_for_arm()
                 delay(delay_ms)
-                if (OP.stop_signal.is_greenlight() || !predicate()) return;
+                if (OP.stop_event.has_fired() || !predicate()) return;
                 outtake_bucket.position = transition_bucket_target
                 delay(delay_ms)
             }
@@ -119,10 +119,10 @@ class Robot() {
             outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION
             outtake_arm.power = ARM_POWER_COMMAND
             wait_for_arm()
-            if (OP.stop_signal.is_greenlight() || !predicate()) return;
+            if (OP.stop_event.has_fired() || !predicate()) return;
             val real_bucket_position: Double
             if (bucket_position == null) {
-                if (target < ARM_BUCKET_TRANSITION_RISING) real_bucket_position = BUCKET_POSITION_LOADING
+                if (target < ARM_TRANSITION_RISING) real_bucket_position = BUCKET_LOADING
                 else real_bucket_position = BUCKET_BALANCED
             } else {
                 real_bucket_position = bucket_position
@@ -136,9 +136,9 @@ class Robot() {
 
     suspend fun reset_outtake(bucket_controls: Boolean = true) {
         R.outtake_arm.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-        R.outtake_arm.power = ARM_INSIDE_POWER
+        R.outtake_arm.power = ARM_POWER_RESET
         var reset = true;
-        while (!R.outtake_limit_switch.is_touched && !OP.stop_signal.is_greenlight() && OP.gamepad2.left_stick_x < 0.75) {
+        while (!R.outtake_limit_switch.is_touched && !OP.stop_event.has_fired() && OP.gamepad2.left_stick_x < 0.75) {
             if (bucket_controls) R.outtake_bucket.position += OP.gamepad2.left_stick_y / 200;
             if (OP.gamepad2.right_stick_y.absoluteValue > 0.25) {
                 reset = false;

@@ -30,7 +30,7 @@ suspend fun<L: Any, R: Any> race(a: suspend () -> L, b: suspend () -> R, scope: 
     else return Result.failure(TimeoutException())
 }*/
 
-class Signal {
+class Event {
     private var result: Result<Unit>? = null
     internal var waiting: ArrayList<Continuation<Unit>> = ArrayList()
     internal val mutex = Mutex()
@@ -46,12 +46,12 @@ class Signal {
         result = Result.success(Unit)
         resume()
     }
-    public suspend fun greenlight() {
+    public suspend fun fire() {
         mutex.lock()
         _greenlight()
         mutex.unlock()
     }
-    public fun try_greenlight(): Boolean {
+    public fun try_fire(): Boolean {
         if (!mutex.tryLock()) return false
         _greenlight()
         mutex.unlock()
@@ -60,12 +60,12 @@ class Signal {
     private fun _redlight() {
         result = null
     }
-    public suspend fun redlight() {
+    public suspend fun cancel() {
         mutex.lock()
         _redlight()
         mutex.unlock()
     }
-    public fun try_redlight(): Boolean {
+    public fun try_cancel(): Boolean {
         if (!mutex.tryLock()) return false
         _redlight()
         mutex.unlock()
@@ -75,12 +75,12 @@ class Signal {
         result = Result.failure(reason)
         resume()
     }
-    public suspend fun blow_up_everything(reason: Throwable = Exception("Signal blew up")) {
+    public suspend fun throw_exception(reason: Throwable = Exception("Signal blew up")) {
         mutex.lock()
         _blow_up_everything(reason)
         mutex.unlock()
     }
-    public fun try_blow_up_everything(reason: Throwable = Exception("Signal blew up")): Boolean {
+    public fun try_throw_exception(reason: Throwable = Exception("Signal blew up")): Boolean {
         if (!mutex.tryLock()) return false
         _blow_up_everything(reason)
         mutex.unlock()
@@ -98,7 +98,7 @@ class Signal {
             mutex.unlock()
         }
     }
-    fun is_greenlight() : Boolean {
+    fun has_fired() : Boolean {
         return result != null;
     }
 }
@@ -126,7 +126,7 @@ class FeedSource<T>(value: T) {
 class FeedListener<T>(source: FeedSource<T>) {
     private var last_updated = -1
     private val source = source
-    private var signal: Signal? = null;
+    private var event: Event? = null;
     var value = source.value;
 
     public suspend fun get_next(scope: CoroutineScope): T {
@@ -173,7 +173,7 @@ interface Trajectoryable {
 }
 suspend fun follow_trajectory_sequence(trajectorySeq: TrajectorySequence, drive: Trajectoryable, op: AsyncOpMode) {
     drive.followTrajectorySequenceAsync(trajectorySeq)
-    while (op.start_signal.is_greenlight() && !op.stop_signal.is_greenlight() && drive.isBusy()) {
+    while (op.start_event.has_fired() && !op.stop_event.has_fired() && drive.isBusy()) {
         drive.update()
         yield()
     }

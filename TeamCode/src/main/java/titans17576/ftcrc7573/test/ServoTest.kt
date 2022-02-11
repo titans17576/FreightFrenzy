@@ -2,7 +2,6 @@ package titans17576.ftcrc7573.test
 
 import com.qualcomm.robotcore.hardware.Gamepad
 import com.qualcomm.robotcore.hardware.Servo
-import com.qualcomm.robotcore.hardware.TouchSensor
 import kotlinx.coroutines.delay
 import titans17576.ftcrc7573.AsyncOpMode
 import titans17576.ftcrc7573.DeferredAsyncOpMode
@@ -21,7 +20,7 @@ class ServoTest(op: AsyncOpMode) : DeferredAsyncOpMode {
         //op.launch { servo_switcher() }
         op.launch { servo_direction_change(op.gamepad1) }
 
-        op.start_signal.await()
+        op.start_event.await()
         op.while_live {
             if (op.gamepad1.dpad_up) position += 0.01
             if (op.gamepad1.dpad_down) position -= 0.01
@@ -43,7 +42,7 @@ class ServoTest(op: AsyncOpMode) : DeferredAsyncOpMode {
     }
 
     suspend fun servo_direction_change(gamepad: Gamepad) {
-        op.start_signal.await()
+        op.start_event.await()
         op.while_live {
             if (gamepad.a) {
                 if (servoright!!.direction == Servo.Direction.FORWARD) servoright!!.direction = Servo.Direction.REVERSE
@@ -58,7 +57,7 @@ class ServoTest(op: AsyncOpMode) : DeferredAsyncOpMode {
         var entry = iter.next()!!
         servoright = entry.value
         servoname = entry.key
-        op.start_signal.await()
+        op.start_event.await()
         op.while_live {
             if (op.gamepad1.b) {
                 if (!iter.hasNext()) iter = op.hardwareMap.servo.entrySet().iterator();
@@ -75,7 +74,7 @@ class TouchTest(op: AsyncOpMode) : DeferredAsyncOpMode {
     val op = op
     val touchSensor = TouchSensor7573(op.hardwareMap["outtake_arm_limit"])// as TouchSensor
     override suspend fun op_mode() {
-        op.start_signal.await()
+        op.start_event.await()
         op.while_live {
             op.telemetry.addData("Touch Sensor Pressed", touchSensor.is_touched)
             op.telemetry.update()
@@ -93,7 +92,7 @@ class DoubleServoTest(op: AsyncOpMode) : DeferredAsyncOpMode {
         //op.launch { servo_direction_change(op.gamepad1) }
         //servoleft.direction = Servo.Direction.REVERSE
 
-        op.start_signal.await()
+        op.start_event.await()
         op.while_live {
             if (op.gamepad1.dpad_up) position += 0.01
             if (op.gamepad1.dpad_down) position -= 0.01

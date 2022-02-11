@@ -8,7 +8,7 @@ import titans17576.ftcrc7573.*
 class ChristianAutoTest(op: AsyncOpMode) : DeferredAsyncOpMode {
     val op = op
     override suspend fun op_mode() {
-        op.start_signal.await()
+        op.start_event.await()
         val bot = Meet2Drive(op.hardwareMap)
         val path = NoCarouselAutoPath(true, bot.trajectory_builder_factory())
         bot.poseEstimate = path.initial_pose
