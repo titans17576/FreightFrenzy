@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.hardware.*
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit
+import java.time.Instant
 
 class Box<T>(v: T) { var v = v }
 class Tuple<A, B>(a: A, b: B) { var a = a; var b = b }
@@ -26,6 +27,20 @@ class Either<L: Any, R: Any> private constructor(is_left: Boolean, obj: Any) {
 
 val Double.toRadians: Double
     get() = this/180*Math.PI
+
+class Stopwatch {
+    private var _last_clicked = System.currentTimeMillis();
+    val last_clicked get() = _last_clicked
+    fun get_ellapsed(): Long {
+        return System.currentTimeMillis() - last_clicked
+    }
+    fun reset(): Long {
+        val now = System.currentTimeMillis()
+        val ret = now - last_clicked
+        _last_clicked = now
+        return ret
+    }
+}
 
 class TouchSensor7573(channel: DigitalChannel) {
     constructor(hardwareDevice: HardwareDevice) : this(hardwareDevice as DigitalChannel)
