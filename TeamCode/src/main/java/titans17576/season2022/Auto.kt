@@ -79,12 +79,41 @@ class CarouselDepot(is_red: Boolean, op: AsyncOpMode) : titans17576.freightfrenz
 
         //drive to carousel
         follow_trajectory_sequence(path.trajectories.poll()!!, bot, op)
-        delay(2000) //dump into correct level
+        follow_trajectory_sequence(path.trajectories.poll()!!, bot, op)
+        //delay
+        delay(2000)
 
-
-        //Park
         follow_trajectory_sequence(path.trajectories.poll()!!, bot, op)
         delay(30000)
+    }
+}
 
+class BarcodeCarouselWarehousePark(is_red: Boolean, op: AsyncOpMode) : titans17576.freightfrenzy.Regionals.AutoBase(op) {
+    val is_red = is_red
+
+    override suspend fun op_mode() {
+        val bot = RegionalsDrive(op.hardwareMap)
+        val path = Barcode_Carousel_Warehouse_Park(is_red, bot.trajectory_builder_factory())
+        bot.poseEstimate = path.initial_pose
+
+        //val barcode_eventually = op.async { get_grasshopper_location(op, this) }
+        op.start_event.await()
+        //val barcode = barcode_eventually.await()
+
+        //drive to hub
+        follow_trajectory_sequence(path.trajectories.poll()!!, bot, op)
+        delay(2000)
+
+        //drive to carousel
+        follow_trajectory_sequence(path.trajectories.poll()!!, bot, op)
+        //delay
+        delay(2000)
+
+        //drive to carousel
+        follow_trajectory_sequence(path.trajectories.poll()!!, bot, op)
+        delay(2000)
+
+        follow_trajectory_sequence(path.trajectories.poll()!!, bot, op)
+        delay(30000)
     }
 }
