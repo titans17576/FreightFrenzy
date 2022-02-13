@@ -25,16 +25,16 @@ val OUTTAKE_POSITION_VERTICAL: Double = 0.34
 val OUTTAKE_POSITION_OUTSIDE: Double = 0.57
 val OUTTAKE_POSITION_OUTSIDE_HORIZONTAL: Double = 0.67
 
-
 val ARM_LOADING: Int = 0;
 val ARM_TRANSITION_RISING = 200;
-val ARM_TRANSITION_LOWERING = 500;
+val ARM_TRANSITION_LOWERING = 350;
 val ARM_LEVEL_1: Int = 1090;
 val ARM_LEVEL_2: Int = 522;
 val ARM_LEVEL_3: Int = 775;
 val ARM_LEVEL_MAX: Int = 1000;
 val ARM_POWER_RESET: Double = -0.325;
 val ARM_POWER_COMMAND = 0.55
+val ARM_POWER_COMMAND_SLOW = 0.3
 
 val BUCKET_LOADING = 0.21
 val BUCKET_TRANSITION_RISING = 0.17
@@ -97,7 +97,7 @@ public class Robot() {
     }
 
     val outtake_commander: Semaphore = Semaphore(1)
-    suspend fun command_outtake(target: Int, bucket_position: Double? = null, delay_ms: Long = 400, threshold: Int = 10, predicate: () -> Boolean = { true }) {
+    suspend fun command_outtake(target: Int, bucket_position: Double? = null, delay_ms: Long = 400, threshold: Int = 10, command_power: Double = ARM_POWER_COMMAND, predicate: () -> Boolean = { true }) {
         outtake_commander.acquire()
         try {
             OP.log("Arm Position Target", target, -1);
@@ -140,7 +140,7 @@ public class Robot() {
 
                     outtake_arm.targetPosition = transition_arm_target
                     outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION
-                    outtake_arm.power = ARM_POWER_COMMAND
+                    outtake_arm.power = command_power
                     if (!wait_for_arm()) return;
                     delay(delay_ms)
                     if (OP.stop_event.has_fired() || !predicate()) return;
@@ -149,8 +149,8 @@ public class Robot() {
                 }
                 outtake_arm.targetPosition = target
                 outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION
-                outtake_arm.power = ARM_POWER_COMMAND
-                if (!wait_for_arm()) return;
+                outtake_arm.power = command_power
+            if (!wait_for_arm()) return;
                 if (OP.stop_event.has_fired() || !predicate()) return;
             }
             val real_bucket_position: Double

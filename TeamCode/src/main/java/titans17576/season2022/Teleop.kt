@@ -1,6 +1,7 @@
 package titans17576.season2022
 
 import com.qualcomm.robotcore.hardware.DcMotor
+import com.qualcomm.robotcore.hardware.ServoImplEx
 import kotlinx.coroutines.delay
 import titans17576.ftcrc7573.DeferredAsyncOpMode
 import titans17576.ftcrc7573.OP
@@ -136,10 +137,14 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
                 || OP.gamepad2.y || (philip && OP.gamepad1.y)
                 || OP.gamepad2.x || (philip && OP.gamepad1.x)
             ) && automation_allowed) {
-                if (OP.gamepad2.x || (philip && OP.gamepad1.x)) armposition = ARM_LEVEL_1
+                var power = ARM_POWER_COMMAND
+                if (OP.gamepad2.x || (philip && OP.gamepad1.x)) {
+                    armposition = ARM_LEVEL_1
+                    power = ARM_POWER_COMMAND_SLOW
+                }
                 if (OP.gamepad2.y || (philip && OP.gamepad1.y)) armposition = ARM_LEVEL_2
                 if (OP.gamepad2.b || (philip && OP.gamepad1.b)) armposition = ARM_LEVEL_3
-                R.command_outtake(armposition, bucket_position)
+                R.command_outtake(armposition, bucket_position, command_power = power)
             } else if ((OP.gamepad2.right_bumper || (philip && OP.gamepad1.right_bumper)) && automation_allowed) {
                 armposition = ARM_LOADING
                 R.command_outtake(armposition, bucket_position)
@@ -175,25 +180,25 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
             if (!R.automation_allowed()) {
                 R.outtake_commander.acquire()
                 R.outtake_arm.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-                R.outtake_bucket.controller.pwmDisable()
+                (R.outtake_bucket as ServoImplEx).setPwmDisable()
                 var cont = true
                 val bucket_job = OP.launch {
                     OP.while_live {
                         if (!cont) it()
                         if (OP.gamepad2.dpad_down) {
-                            R.outtake_bucket.controller.pwmDisable()
+                            (R.outtake_bucket as ServoImplEx).setPwmDisable()
                             delay(750)
                         } else if (OP.gamepad2.dpad_left) {
                             R.outtake_bucket.position = BUCKET_LOADING
-                            R.outtake_bucket.controller.pwmEnable()
+                            (R.outtake_bucket as ServoImplEx).setPwmEnable()
                             delay(750)
                         } else if (OP.gamepad2.dpad_up) {
                             R.outtake_bucket.position = BUCKET_TRANSITION_RISING
-                            R.outtake_bucket.controller.pwmEnable()
+                            (R.outtake_bucket as ServoImplEx).setPwmEnable()
                             delay(750)
                         } else if (OP.gamepad2.dpad_right) {
                             R.outtake_bucket.position = BUCKET_BALANCED
-                            R.outtake_bucket.controller.pwmEnable()
+                            (R.outtake_bucket as ServoImplEx).setPwmEnable()
                             delay(750)
                         }
                         OP.log("MANUAL bucket enabled", R.outtake_bucket.controller.pwmStatus, 50)
