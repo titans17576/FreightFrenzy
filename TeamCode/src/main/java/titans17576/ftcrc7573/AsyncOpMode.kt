@@ -79,7 +79,7 @@ public abstract class AsyncOpMode : OpMode() {
      * handles clearing and updating to keep telemetry clean.
      * @param label - the label to log next to the value
      * @param value - the value to log
-     * @param ttl - the amount of internal executor iterations to cache the value for. Defaults to 5
+     * @param ttl - the amount of internal executor iterations to cache the value for. Defaults to 5. Set to -1 to keep forever
      */
     fun log(name: String, value: Any, ttl: Int = 5) {
         for (entry in telemetry_store) {
@@ -151,7 +151,7 @@ public abstract class AsyncOpMode : OpMode() {
      * @param block - the code block to loop
      * @param require_started - whether to require that the operator has pressed the "Start" button on the driver station
      */
-    suspend fun while_live(f: suspend (it: () -> Unit) -> Unit, require_started: Boolean) {
+    suspend fun while_live(require_started: Boolean, f: suspend (it: () -> Unit) -> Unit) {
         var cancelled = false
         while ((!require_started || start_event.has_fired()) && !stop_event.has_fired()) {
             f { cancelled = true }
@@ -167,7 +167,7 @@ public abstract class AsyncOpMode : OpMode() {
      * @param block - the code block to loop
      * @param require_started - whether to require that the operator has pressed the "Start" button on the driver station
      */
-    suspend fun while_live(f: suspend( it: () -> Unit) -> Unit) { while_live(f, true); }
+    suspend fun while_live(f: suspend( it: () -> Unit) -> Unit) { while_live(true, f); }
 
     /**
      * Wait until a condition becomes true. The coroutine will yield between each

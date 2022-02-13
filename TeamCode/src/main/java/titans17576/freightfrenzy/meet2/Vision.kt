@@ -37,7 +37,7 @@ suspend fun camera_init(op: AsyncOpMode): FeedListener<Barcode> {
     //use GPU acceleration for faster render time
     camera.setViewportRenderer(OpenCvCamera.ViewportRenderer.GPU_ACCELERATED)
     camera.setPipeline(TeamShippingElementPipeline(marker_pos, op))
-    //FtcDashboard.getInstance().startCameraStream(camera, 10.0)
+    FtcDashboard.getInstance().startCameraStream(camera, 10.0)
 
     camera_map.put(op, camera)
     return marker_pos.fork()

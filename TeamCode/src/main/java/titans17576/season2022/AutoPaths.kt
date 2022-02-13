@@ -135,3 +135,29 @@ class Barcode_Carousel_Warehouse_Park(is_red: Boolean, factory: TrajectoryBuilde
     }
 
 }
+
+class Barcode_Warehouse_Park(val is_red: Boolean, val factory: TrajectoryBuilderFactory)
+    : PathBuilder7573 (
+    Pose2d(
+        10.0,
+        -63.0 * (if (is_red) 1.0 else -1.0),
+        90.0.toRadians * (if (is_red) 1.0 else -1.0)
+    ),
+    factory) {
+    val side = if (is_red) 1.0 else -1.0
+
+    init {
+        trajectories.add(
+            new_movement()
+                .splineTo(Vector2d(-12.0, -45.0 * side), 90.0.toRadians * side)
+                .turn(180.0.toRadians)
+                .build(),
+        )
+        trajectories.add(
+            new_movement()
+                .splineTo(Vector2d(60.0, -65.0 * side), 0.0 * side)
+                .build()
+
+        )
+    }
+}

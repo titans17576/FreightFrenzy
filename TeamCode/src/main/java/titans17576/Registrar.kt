@@ -22,8 +22,8 @@ fun freight_frenzy_regionals(){
     register_defered_async_opmode("/17576/Regionals/Blue/Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.CarouselDepot(false, op)}
     register_defered_async_opmode("/17576/Regionals/Blue/Barcode-Carousel-Warehouse-Park", true) {op -> titans17576.freightfrenzy.Regionals.BarcodeCarouselWarehousePark(false, op)}
     register_defered_async_opmode("/17576/Regionals/Red/Barcode-Carousel-Warehouse-Park", true) {op -> titans17576.freightfrenzy.Regionals.BarcodeCarouselWarehousePark(true, op)}
-
-
+    register_defered_async_opmode("/17576/Regionals/Red/Barcode-Warehouse-Park", true) { titans17576.freightfrenzy.Regionals.BarcodeWarehousePark(true) }
+    register_defered_async_opmode("/17576/Regionals/Blue/Barcode-Warehouse-Park", true) { titans17576.freightfrenzy.Regionals.BarcodeWarehousePark(false) }
 }
 
 fun freight_frenzy_meet_3() {
@@ -36,11 +36,11 @@ fun freight_frenzy_meet_3() {
 
 fun op_modes_current() {
     freight_frenzy_meet_3()
-    register_defered_async_opmode("/7573/CameraTest", false) { op -> titans17576.ftcrc7573.test.CameraTest(op) }
 }
 fun op_modes_other() {
     freight_frenzy_regionals()
     ftcrc7573_tests()
+    register_defered_async_opmode("/7573/CameraTest", false) { op -> titans17576.ftcrc7573.test.CameraTest(op) }
 }
 
 fun freight_frenzy_meet_2() {

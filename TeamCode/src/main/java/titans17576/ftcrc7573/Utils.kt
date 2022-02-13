@@ -31,7 +31,7 @@ val Double.toRadians: Double
 class Stopwatch {
     private var _last_clicked = System.currentTimeMillis();
     val last_clicked get() = _last_clicked
-    fun get_ellapsed(): Long {
+    fun ellapsed(): Long {
         return System.currentTimeMillis() - last_clicked
     }
     fun reset(): Long {

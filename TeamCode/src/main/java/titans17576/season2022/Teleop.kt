@@ -2,7 +2,6 @@ package titans17576.season2022
 
 import com.qualcomm.robotcore.hardware.DcMotor
 import kotlinx.coroutines.delay
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import titans17576.ftcrc7573.DeferredAsyncOpMode
 import titans17576.ftcrc7573.OP
 import titans17576.ftcrc7573.Stopwatch
@@ -19,6 +18,7 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
         OP.launch { distance_sensor_subsystem() }
         OP.launch { outtake_arm_subsystem() }
         OP.launch { tse_arm_subsystem() }
+        OP.launch { outtake_manual_subsystem() }
     }
 
     suspend fun drive_subsystem(){
@@ -108,9 +108,11 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
 
             var bucket_position: Double? = null
 
-            val automation_allowed = OP.gamepad2.left_stick_x < 0.75
+            val automation_allowed = R.automation_allowed()
             OP.wait_for {
                 OP.gamepad2.b || (philip && OP.gamepad1.b)
+                || OP.gamepad2.y || (philip && OP.gamepad1.y)
+                || OP.gamepad2.x || (philip && OP.gamepad1.x)
                 || (OP.gamepad2.right_bumper) || (philip && OP.gamepad1.right_bumper)
                 || (OP.gamepad2.right_stick_y.absoluteValue > 0.1)
                 || OP.gamepad2.a || (philip && OP.gamepad1.a)
@@ -129,21 +131,25 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
                 }
             }
 
-            if ((OP.gamepad2.b || (philip && OP.gamepad1.b)) && automation_allowed) {
-                armposition = ARM_LEVEL_3
+            if ((
+                OP.gamepad2.b || (philip && OP.gamepad1.b)
+                || OP.gamepad2.y || (philip && OP.gamepad1.y)
+                || OP.gamepad2.x || (philip && OP.gamepad1.x)
+            ) && automation_allowed) {
+                if (OP.gamepad2.x || (philip && OP.gamepad1.x)) armposition = ARM_LEVEL_1
+                if (OP.gamepad2.y || (philip && OP.gamepad1.y)) armposition = ARM_LEVEL_2
+                if (OP.gamepad2.b || (philip && OP.gamepad1.b)) armposition = ARM_LEVEL_3
+                R.command_outtake(armposition, bucket_position)
             } else if ((OP.gamepad2.right_bumper || (philip && OP.gamepad1.right_bumper)) && automation_allowed) {
-                R.command_outtake(0)
-                R.reset_outtake()
                 armposition = ARM_LOADING
-            } else {
+                R.command_outtake(armposition, bucket_position)
+                R.reset_outtake()
+            } else if (OP.gamepad2.right_stick_y.absoluteValue > 0.1) {
                 armposition += (OP.gamepad2.right_stick_y * 10).toInt()
-                if (R.outtake_arm.currentPosition > ARM_LEVEL_MAX) armposition = ARM_LEVEL_MAX
-                else if (R.outtake_arm.currentPosition < ARM_LOADING) armposition = ARM_LOADING
+                /*if (R.outtake_arm.currentPosition > ARM_LEVEL_MAX) armposition = ARM_LEVEL_MAX
+                else if (R.outtake_arm.currentPosition < ARM_LOADING) armposition = ARM_LOADING*/
+                R.command_outtake(armposition, bucket_position, delay_ms = 0)
             }
-            R.command_outtake(armposition, bucket_position)
-
-            OP.log("Arm Position Target", armposition);
-            OP.log("Arm Position Current", R.outtake_arm.currentPosition);
         }
     }
 
@@ -159,6 +165,50 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
                 tse_pos -= 0.03
             } else if (OP.gamepad2.dpad_down) {
                 tse_pos += 0.03
+            }
+        }
+    }
+
+    suspend fun outtake_manual_subsystem() {
+        OP.start_event.await()
+        OP.while_live {
+            if (!R.automation_allowed()) {
+                R.outtake_commander.acquire()
+                R.outtake_arm.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
+                R.outtake_bucket.controller.pwmDisable()
+                var cont = true
+                val bucket_job = OP.launch {
+                    OP.while_live {
+                        if (!cont) it()
+                        if (OP.gamepad2.dpad_down) {
+                            R.outtake_bucket.controller.pwmDisable()
+                            delay(750)
+                        } else if (OP.gamepad2.dpad_left) {
+                            R.outtake_bucket.position = BUCKET_LOADING
+                            R.outtake_bucket.controller.pwmEnable()
+                            delay(750)
+                        } else if (OP.gamepad2.dpad_up) {
+                            R.outtake_bucket.position = BUCKET_TRANSITION_RISING
+                            R.outtake_bucket.controller.pwmEnable()
+                            delay(750)
+                        } else if (OP.gamepad2.dpad_right) {
+                            R.outtake_bucket.position = BUCKET_BALANCED
+                            R.outtake_bucket.controller.pwmEnable()
+                            delay(750)
+                        }
+                        OP.log("MANUAL bucket enabled", R.outtake_bucket.controller.pwmStatus, 50)
+                        OP.log("MANUAL bucket position", R.outtake_bucket.position, 50)
+                    }
+                }
+                OP.while_live {
+                    if (R.automation_allowed()) it()
+                    R.outtake_arm.power = -OP.gamepad2.right_stick_y * 0.75
+                    OP.log("MANUAL arm power", R.outtake_arm.power, 50)
+                }
+                R.outtake_arm.power = 0.0;
+                cont = false;
+                bucket_job.join()
+                R.outtake_commander.release()
             }
         }
     }
