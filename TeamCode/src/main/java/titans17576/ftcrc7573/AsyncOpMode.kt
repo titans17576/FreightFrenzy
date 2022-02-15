@@ -214,6 +214,7 @@ private class AsyncOpModeDispatcher(op: AsyncOpMode) : CoroutineDispatcher() {
                 System.out.println("Alador! Throwable")
                 System.out.println("==========================")
                 System.out.println(e)
+                e.printStackTrace()
                 System.out.println("==========================")
                 op.requestOpModeStop()
                 return
@@ -247,9 +248,10 @@ private class ExceptionHandler(dispatcher: AsyncOpModeDispatcher,
         dis.error = e
         dis.op.telemetry.addData("Error", e.toString())
         dis.op.telemetry.update()
-        System.out.println("Alador!")
+        System.out.println("Alador Again!")
         System.out.println("==========================")
         System.out.println(e)
+        e.printStackTrace()
         System.out.println("==========================")
         dis.op.requestOpModeStop()
 

@@ -27,23 +27,24 @@ val OUTTAKE_POSITION_OUTSIDE_HORIZONTAL: Double = 0.67
 
 val ARM_LOADING: Int = 0;
 val ARM_TRANSITION_RISING = 200;
-val ARM_TRANSITION_LOWERING = 350;
-val ARM_LEVEL_1: Int = 1090;
+val ARM_TRANSITION_LOWERING = 425;
+val ARM_LEVEL_1: Int = 875;
 val ARM_LEVEL_2: Int = 522;
 val ARM_LEVEL_3: Int = 775;
 val ARM_LEVEL_MAX: Int = 1000;
 val ARM_POWER_RESET: Double = -0.325;
-val ARM_POWER_COMMAND = 0.55
+val ARM_POWER_COMMAND = 0.4
 val ARM_POWER_COMMAND_SLOW = 0.3
 
 val BUCKET_LOADING = 0.21
 val BUCKET_TRANSITION_RISING = 0.17
-val BUCKET_TRANSITION_LOWERING = 0.14
+val BUCKET_TRANSITION_LOWERING = 0.155
 val BUCKET_DUMP = 0.73
-val BUCKET_BALANCED = 0.05
+val BUCKET_BALANCED = 0.0
 val BUCKET_TRANSITION_FALLING = 0.07
 
-val TSE_RAISED = 0.0
+val TSE_RAISED = 0.5
+val TSE_DEPLOY = 0.36
 val TSE_LOWERED = 0.0
 
 val CAROUSEL_MAXPOW = 0.6
@@ -64,6 +65,7 @@ public class Robot() {
     //val outtake_distance_sensor = OP.hardwareMap.get("outtake_distance_sensor") as DistanceSensor
     val outtake_limit_switch = TouchSensor7573(OP.hardwareMap.get("outtake_arm_limit"))
     val carousel = OP.hardwareMap.get("carousel") as DcMotorEx
+    val tse = OP.hardwareMap.get("tse") as Servo
 
     init {
         left_front.direction = DcMotorSimple.Direction.FORWARD
@@ -89,6 +91,10 @@ public class Robot() {
         right_front.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
         right_back.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
 
+        tse.direction = Servo.Direction.REVERSE
+        tse.position = TSE_RAISED
+        attempt_servo_pwm(tse, false)
+
         R = this
     }
 
@@ -97,7 +103,7 @@ public class Robot() {
     }
 
     val outtake_commander: Semaphore = Semaphore(1)
-    suspend fun command_outtake(target: Int, bucket_position: Double? = null, delay_ms: Long = 400, threshold: Int = 10, command_power: Double = ARM_POWER_COMMAND, predicate: () -> Boolean = { true }) {
+    suspend fun command_outtake(target: Int, bucket_position: Double? = null, delay_ms: Long = 200, threshold: Int = 10, command_power: Double = ARM_POWER_COMMAND, predicate: () -> Boolean = { true }) {
         outtake_commander.acquire()
         try {
             OP.log("Arm Position Target", target, -1);
@@ -172,17 +178,31 @@ public class Robot() {
     suspend fun reset_outtake(bucket_controls: Boolean = true) {
         R.outtake_arm.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         R.outtake_arm.power = ARM_POWER_RESET
-        var reset = true;
         while (!R.outtake_limit_switch.is_touched && !OP.stop_event.has_fired() && automation_allowed()) {
             if (bucket_controls) R.outtake_bucket.position += OP.gamepad2.left_stick_y / 200;
-            if (OP.gamepad2.right_stick_y.absoluteValue > 0.25) {
-                reset = false;
-                OP.gamepad1.rumble(200);
-                OP.gamepad2.rumble(200);
-                break;
-            }
             yield();
         }
-        if (reset) R.outtake_arm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        if (R.outtake_limit_switch.is_touched) R.outtake_arm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+    }
+
+    fun attempt_servo_pwm(servo: Servo, new_mode: Boolean): Boolean {
+        try {
+            val servoimpl = servo as ServoImplEx
+            if (new_mode) servoimpl.setPwmEnable()
+            else servoimpl.setPwmDisable()
+            return true;
+        } catch(e: Exception) {
+            println(e);
+        }
+        return false;
+    }
+    fun attempt_servo_pwm_status(servo: Servo): String? {
+        try {
+            val servoimpl = servo as ServoImplEx
+            return servoimpl.controller.pwmStatus.toString();
+        } catch (e: Exception) {
+            println(e);
+        }
+        return null;
     }
 }

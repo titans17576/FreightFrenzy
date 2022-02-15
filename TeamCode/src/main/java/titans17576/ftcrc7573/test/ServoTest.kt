@@ -9,7 +9,7 @@ import titans17576.ftcrc7573.TouchSensor7573
 
 class ServoTest(op: AsyncOpMode) : DeferredAsyncOpMode {
     val op = op
-    var servoright: Servo? = op.hardwareMap["outtake_bucket"] as Servo
+    var servoright: Servo? = op.hardwareMap["tse"] as Servo
     var servoname = ""
     //val servoleft = op.hardwareMap["outtake_left"] as Servo
     var position = 0.0
@@ -29,11 +29,11 @@ class ServoTest(op: AsyncOpMode) : DeferredAsyncOpMode {
             //if (op.gamepad2.dpad_down) position2 -= 0.01
             servoright!!.position = position
             //servoleft.position = position
-            op.telemetry.addData("Servo Direction Right: ", servoright!!.direction)
-            op.telemetry.addData("Servo Value Right: ", position)
-            op.telemetry.addData("Servo Name", servoname);
-            //op.telemetry.addData("Servo Direction Left: ", servoleft.direction)
-            //op.telemetry.addData("Servo Value Left: ", position)
+            op.log("Servo Direction Right: ", servoright!!.direction)
+            op.log("Servo Value Right: ", position)
+            op.log("Servo Name", servoname);
+            //op.log("Servo Direction Left: ", servoleft.direction)
+            //op.log("Servo Value Left: ", position)
             op.telemetry.update()
             delay(100)
         }
@@ -76,7 +76,7 @@ class TouchTest(op: AsyncOpMode) : DeferredAsyncOpMode {
     override suspend fun op_mode() {
         op.start_event.await()
         op.while_live {
-            op.telemetry.addData("Touch Sensor Pressed", touchSensor.is_touched)
+            op.log("Touch Sensor Pressed", touchSensor.is_touched)
             op.telemetry.update()
         }
     }
@@ -98,8 +98,7 @@ class DoubleServoTest(op: AsyncOpMode) : DeferredAsyncOpMode {
             if (op.gamepad1.dpad_down) position -= 0.01
             servoright!!.position = position
             //servoleft!!.position = position
-            op.telemetry.addData("Servo Value: ", position)
-            op.telemetry.update()
+            op.log("Servo Value: ", position, 1000)
             delay(100)
         }
         //Midd position = 0.4

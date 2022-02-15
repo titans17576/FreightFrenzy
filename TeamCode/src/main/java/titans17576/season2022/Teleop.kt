@@ -22,7 +22,7 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
         OP.launch { outtake_manual_subsystem() }
     }
 
-    suspend fun drive_subsystem(){
+    suspend fun drive_subsystem() {
         OP.start_event.await()
 
         R.left_front.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
@@ -30,7 +30,7 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
         R.right_front.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
         R.right_back.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
 
-        OP.while_live{
+        OP.while_live {
 
             OP.log("LEFT", OP.gamepad1.left_stick_y)
             OP.log("RIGHT", OP.gamepad1.right_stick_x)
@@ -43,7 +43,7 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
             var turn = OP.gamepad1.right_stick_x.toDouble()
             var strafe = OP.gamepad1.left_stick_x.toDouble()
 
-            val slow = if (OP.gamepad1.left_bumper || OP.gamepad2.left_bumper ) 0.4 else 1.0
+            val slow = if (OP.gamepad1.left_bumper || OP.gamepad2.left_bumper) 0.4 else 1.0
 
             //POV drive (not tank)
             R.left_back.power = (drive + turn - strafe) * slow
@@ -59,6 +59,8 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
         OP.start_event.await()
 
         var intake_power = 0.0
+        var tse_pos = TSE_RAISED
+        R.attempt_servo_pwm(R.tse, true)
         OP.while_live {
             intake_power = 0.0
             intake_power += OP.gamepad1.right_trigger
@@ -66,8 +68,24 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
             intake_power += OP.gamepad2.left_stick_y
             R.intake_motor.power = intake_power
 
-            R.carousel.power = (OP.gamepad2.left_trigger - OP.gamepad2.right_trigger).toDouble() * CAROUSEL_MAXPOW
+            var carousel_power =
+                (OP.gamepad2.left_trigger - OP.gamepad2.right_trigger).toDouble() * CAROUSEL_MAXPOW
+            val min_carousel_power = 0.2
+            if (carousel_power.absoluteValue < min_carousel_power && carousel_power.absoluteValue > 0.075) carousel_power =
+                min_carousel_power * Math.sin(carousel_power)
+            R.carousel.power = carousel_power
             if (philip) R.carousel.power += (OP.gamepad1.left_trigger - OP.gamepad1.right_trigger).toDouble() * CAROUSEL_MAXPOW
+
+            if (OP.gamepad1.y) {
+                tse_pos = TSE_RAISED
+            } else if (OP.gamepad1.b) {
+                tse_pos = TSE_LOWERED
+            } else if (OP.gamepad1.x) {
+                tse_pos = TSE_DEPLOY
+            } else if (OP.gamepad1.a) {
+                tse_pos -= 0.0075
+            }
+            R.tse.position = tse_pos
         }
     }
 
@@ -84,7 +102,7 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
         OP.gamepad1.rumble(1.0, 1.0, 350)
     }
 
-    suspend fun distance_sensor_subsystem(){
+    suspend fun distance_sensor_subsystem() {
         OP.start_event.await()
         /*OP.while_live {
             if (R.outtake_distance_sensor.getDistance(DistanceUnit.CM) < 2.5){
@@ -112,15 +130,15 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
             val automation_allowed = R.automation_allowed()
             OP.wait_for {
                 OP.gamepad2.b || (philip && OP.gamepad1.b)
-                || OP.gamepad2.y || (philip && OP.gamepad1.y)
-                || OP.gamepad2.x || (philip && OP.gamepad1.x)
-                || (OP.gamepad2.right_bumper) || (philip && OP.gamepad1.right_bumper)
-                || (OP.gamepad2.right_stick_y.absoluteValue > 0.1)
-                || OP.gamepad2.a || (philip && OP.gamepad1.a)
-                || !automation_allowed
+                        || OP.gamepad2.y || (philip && OP.gamepad1.y)
+                        || OP.gamepad2.x || (philip && OP.gamepad1.x)
+                        || (OP.gamepad2.right_bumper) || (philip && OP.gamepad1.right_bumper)
+                        || (OP.gamepad2.right_stick_y.absoluteValue > 0.1)
+                        || OP.gamepad2.a || (philip && OP.gamepad1.a)
+                        || !automation_allowed
             }
 
-            if (OP.gamepad2.a || (philip && OP.gamepad1.a)) {
+            if ((OP.gamepad2.a || (philip && OP.gamepad1.a)) && (R.outtake_arm.currentPosition - ARM_LOADING).absoluteValue > 200) {
                 R.outtake_commander.acquire()
                 try {
                     R.outtake_bucket.position = BUCKET_DUMP
@@ -133,10 +151,11 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
             }
 
             if ((
-                OP.gamepad2.b || (philip && OP.gamepad1.b)
-                || OP.gamepad2.y || (philip && OP.gamepad1.y)
-                || OP.gamepad2.x || (philip && OP.gamepad1.x)
-            ) && automation_allowed) {
+                        OP.gamepad2.b || (philip && OP.gamepad1.b)
+                                || OP.gamepad2.y || (philip && OP.gamepad1.y)
+                                || OP.gamepad2.x || (philip && OP.gamepad1.x)
+                        ) && automation_allowed
+            ) {
                 var power = ARM_POWER_COMMAND
                 if (OP.gamepad2.x || (philip && OP.gamepad1.x)) {
                     armposition = ARM_LEVEL_1
@@ -149,8 +168,9 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
                 armposition = ARM_LOADING
                 R.command_outtake(armposition, bucket_position)
                 R.reset_outtake()
-            } else if (OP.gamepad2.right_stick_y.absoluteValue > 0.1) {
-                armposition += (OP.gamepad2.right_stick_y * 10).toInt()
+            } else if (OP.gamepad2.right_stick_y.absoluteValue > 0.1 && automation_allowed) {
+                armposition -= (OP.gamepad2.right_stick_y * 100).toInt()
+                if (armposition < 0) armposition = 0;
                 /*if (R.outtake_arm.currentPosition > ARM_LEVEL_MAX) armposition = ARM_LEVEL_MAX
                 else if (R.outtake_arm.currentPosition < ARM_LOADING) armposition = ARM_LOADING*/
                 R.command_outtake(armposition, bucket_position, delay_ms = 0)
@@ -163,7 +183,8 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
         var tse_pos = TSE_RAISED;
         OP.while_live {
             if (OP.gamepad2.dpad_right) {
-                if ((tse_pos - TSE_RAISED).absoluteValue < (tse_pos - TSE_LOWERED).absoluteValue) tse_pos = TSE_LOWERED
+                if ((tse_pos - TSE_RAISED).absoluteValue < (tse_pos - TSE_LOWERED).absoluteValue) tse_pos =
+                    TSE_LOWERED
                 else tse_pos = TSE_RAISED
                 OP.wait_for { !OP.gamepad2.dpad_right }
             } else if (OP.gamepad2.dpad_up) {
@@ -180,28 +201,32 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
             if (!R.automation_allowed()) {
                 R.outtake_commander.acquire()
                 R.outtake_arm.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-                (R.outtake_bucket as ServoImplEx).setPwmDisable()
+                R.attempt_servo_pwm(R.outtake_bucket, false)
                 var cont = true
                 val bucket_job = OP.launch {
                     OP.while_live {
                         if (!cont) it()
                         if (OP.gamepad2.dpad_down) {
-                            (R.outtake_bucket as ServoImplEx).setPwmDisable()
+                            R.attempt_servo_pwm(R.outtake_bucket, false)
                             delay(750)
                         } else if (OP.gamepad2.dpad_left) {
                             R.outtake_bucket.position = BUCKET_LOADING
-                            (R.outtake_bucket as ServoImplEx).setPwmEnable()
+                            R.attempt_servo_pwm(R.outtake_bucket, true)
                             delay(750)
                         } else if (OP.gamepad2.dpad_up) {
                             R.outtake_bucket.position = BUCKET_TRANSITION_RISING
-                            (R.outtake_bucket as ServoImplEx).setPwmEnable()
+                            R.attempt_servo_pwm(R.outtake_bucket, true)
                             delay(750)
                         } else if (OP.gamepad2.dpad_right) {
                             R.outtake_bucket.position = BUCKET_BALANCED
-                            (R.outtake_bucket as ServoImplEx).setPwmEnable()
+                            R.attempt_servo_pwm(R.outtake_bucket, true)
                             delay(750)
                         }
-                        OP.log("MANUAL bucket enabled", R.outtake_bucket.controller.pwmStatus, 50)
+                        OP.log(
+                            "MANUAL bucket enabled",
+                            R.attempt_servo_pwm_status(R.outtake_bucket).orEmpty(),
+                            50
+                        )
                         OP.log("MANUAL bucket position", R.outtake_bucket.position, 50)
                     }
                 }
@@ -213,6 +238,7 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
                 R.outtake_arm.power = 0.0;
                 cont = false;
                 bucket_job.join()
+                R.attempt_servo_pwm(R.outtake_bucket, true)
                 R.outtake_commander.release()
             }
         }
