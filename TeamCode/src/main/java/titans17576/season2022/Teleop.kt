@@ -70,9 +70,8 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
 
             var carousel_power =
                 (OP.gamepad2.left_trigger - OP.gamepad2.right_trigger).toDouble() * CAROUSEL_MAXPOW
-            val min_carousel_power = 0.2
-            if (carousel_power.absoluteValue < min_carousel_power && carousel_power.absoluteValue > 0.075) carousel_power =
-                min_carousel_power * Math.sin(carousel_power)
+            if (carousel_power.absoluteValue < CAROUSEL_MINPOW && carousel_power.absoluteValue > 0.075) carousel_power =
+                CAROUSEL_MINPOW * Math.sin(carousel_power)
             R.carousel.power = carousel_power
             if (philip) R.carousel.power += (OP.gamepad1.left_trigger - OP.gamepad1.right_trigger).toDouble() * CAROUSEL_MAXPOW
 

@@ -89,7 +89,7 @@ public abstract class AsyncOpMode : OpMode() {
                 return;
             }
         }
-        telemetry_store.add(TelemetryStore(name, value.toString(), 5))
+        telemetry_store.add(TelemetryStore(name, value.toString(), ttl))
     }
 
     private fun do_telemetry() {

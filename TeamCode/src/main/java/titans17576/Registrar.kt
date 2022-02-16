@@ -16,12 +16,12 @@ fun generated_op_mode_registrar(m: OpModeManager) {
 }
 
 fun freight_frenzy_regionals(){
-    register_defered_async_opmode("/17576/Regionals/Red/Barcode-Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.BarcodeCarouselDepot(true, op)}
-    register_defered_async_opmode("/17576/Regionals/Blue/Barcode-Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.BarcodeCarouselDepot(false, op)}
-    register_defered_async_opmode("/17576/Regionals/Red/Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.CarouselDepot(true, op)}
-    register_defered_async_opmode("/17576/Regionals/Blue/Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.CarouselDepot(false, op)}
-    register_defered_async_opmode("/17576/Regionals/Blue/Barcode-Carousel-Warehouse-Park", true) {op -> titans17576.freightfrenzy.Regionals.BarcodeCarouselWarehousePark(false, op)}
-    register_defered_async_opmode("/17576/Regionals/Red/Barcode-Carousel-Warehouse-Park", true) {op -> titans17576.freightfrenzy.Regionals.BarcodeCarouselWarehousePark(true, op)}
+    register_defered_async_opmode("/17576/Regionals/Red/Barcode-Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.BarcodeCarouselDepot(true)}
+    register_defered_async_opmode("/17576/Regionals/Blue/Barcode-Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.BarcodeCarouselDepot(false)}
+    register_defered_async_opmode("/17576/Regionals/Red/Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.CarouselDepot(true)}
+    register_defered_async_opmode("/17576/Regionals/Blue/Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.CarouselDepot(false)}
+    register_defered_async_opmode("/17576/Regionals/Blue/Barcode-Carousel-Warehouse-Park", true) {op -> titans17576.freightfrenzy.Regionals.BarcodeCarouselWarehousePark(false)}
+    register_defered_async_opmode("/17576/Regionals/Red/Barcode-Carousel-Warehouse-Park", true) {op -> titans17576.freightfrenzy.Regionals.BarcodeCarouselWarehousePark(true)}
     register_defered_async_opmode("/17576/Regionals/Red/Barcode-Warehouse-Park", true) { titans17576.freightfrenzy.Regionals.BarcodeWarehousePark(true) }
     register_defered_async_opmode("/17576/Regionals/Blue/Barcode-Warehouse-Park", true) { titans17576.freightfrenzy.Regionals.BarcodeWarehousePark(false) }
 }

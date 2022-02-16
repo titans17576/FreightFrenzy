@@ -8,10 +8,7 @@ import org.openftc.easyopencv.OpenCvCamera
 import org.openftc.easyopencv.OpenCvCameraFactory
 import org.openftc.easyopencv.OpenCvCameraRotation
 import org.openftc.easyopencv.OpenCvPipeline
-import titans17576.ftcrc7573.AsyncOpMode
-import titans17576.ftcrc7573.FeedListener
-import titans17576.ftcrc7573.FeedSource
-import titans17576.ftcrc7573.open_opencv_camera
+import titans17576.ftcrc7573.*
 import java.util.*
 
 enum class Barcode {
@@ -20,7 +17,8 @@ enum class Barcode {
     Right
 }
 
-val camera_map: WeakHashMap<AsyncOpMode, OpenCvCamera> = WeakHashMap()
+private class CameraDat(val camera: OpenCvCamera, val pipeline: TeamShippingElementPipeline)
+private val camera_map: WeakHashMap<AsyncOpMode, CameraDat> = WeakHashMap()
 
 suspend fun camera_init(op: AsyncOpMode): FeedListener<Barcode> {
     val marker_pos: FeedSource<Barcode> = FeedSource(Barcode.Left)
@@ -36,15 +34,18 @@ suspend fun camera_init(op: AsyncOpMode): FeedListener<Barcode> {
     camera.startStreaming(640,480, OpenCvCameraRotation.UPRIGHT)
     //use GPU acceleration for faster render time
     camera.setViewportRenderer(OpenCvCamera.ViewportRenderer.GPU_ACCELERATED)
-    camera.setPipeline(TeamShippingElementPipeline(marker_pos, op))
+    val pipeline = TeamShippingElementPipeline(marker_pos, op)
+    camera.setPipeline(pipeline)
     FtcDashboard.getInstance().startCameraStream(camera, 10.0)
 
-    camera_map.put(op, camera)
+    camera_map.put(op, CameraDat(camera, pipeline))
     return marker_pos.fork()
 }
 
 suspend fun camera_disable(op: AsyncOpMode) {
-    camera_map.get(op)?.stopStreaming()
+    val dat = camera_map.get(op)
+    dat?.camera?.stopStreaming()
+    dat?.pipeline?.release()
 }
 
 class TeamShippingElementPipeline(barcode: FeedSource<Barcode>, op: AsyncOpMode): OpenCvPipeline() {
@@ -54,7 +55,7 @@ class TeamShippingElementPipeline(barcode: FeedSource<Barcode>, op: AsyncOpMode)
     //var red:Mat = Mat()
     var dst: Mat = Mat()
     var img_copy: Mat = Mat()
-    val color: Scalar = Scalar(0.0, 0.0, 255.0)
+    val contour_color: Scalar = Scalar(0.0, 0.0, 255.0)
     val placeholder: Mat = Mat()
     val hsv: Mat = Mat()
     var count7573 = 0
@@ -66,17 +67,6 @@ class TeamShippingElementPipeline(barcode: FeedSource<Barcode>, op: AsyncOpMode)
         //Core.extractChannel(input, red, 0)
         //converting rbg to hsv
         Imgproc.cvtColor(input, hsv, Imgproc.COLOR_RGB2HSV)
-        //binary threshold
-        val min:Double = 150.0
-        val max:Double = 255.0
-        //Imgproc.threshold(red, dst, min, max, Imgproc.THRESH_BINARY)
-
-        //RED
-        //Core.inRange(hsv, Scalar(0.0, 120.0, 70.0), Scalar(10.0, 255.0, 255.0), dst)
-
-        //GREEN
-        //tuned to green wheel
-        //Core.inRange(hsv, Scalar(40.0, 100.0, 70.0), Scalar(80.0, 255.0, 255.0), dst)
 
         //tuned to taped green construction paper reflecting strong lights
         Core.inRange(hsv, Scalar(60.0,50.0,20.0), Scalar(90.0,255.0,255.0), dst)
@@ -84,9 +74,6 @@ class TeamShippingElementPipeline(barcode: FeedSource<Barcode>, op: AsyncOpMode)
         //finding the contours. p1 = img, p2 = contour retrieval mode, p3 = contour approx method
         val contours:List<MatOfPoint> = java.util.ArrayList()
         Imgproc.findContours(dst, contours, placeholder, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE)
-        //drawing contours
-        input!!.copyTo(img_copy)
-        Imgproc.drawContours(img_copy, contours, -1, color, 2)
 
         //finding contour of actual team shipping element
         //src: https://github.com/FTCLib/FTCLib/blob/master/core/vision/src/main/java/com/arcrobotics/ftclib/vision/UGContourRingPipeline.kt
@@ -101,12 +88,11 @@ class TeamShippingElementPipeline(barcode: FeedSource<Barcode>, op: AsyncOpMode)
                 maxWidth = w
                 maxRect = rect
             }
-            c.release() // releasing the buffer of the contour, since after use, it is no longer needed
-            copy.release() // releasing the buffer of the copy of the contour, since after use, it is no longer needed
+
+            //copy.release() // releasing the buffer of the copy of the contour, since after use, it is no longer needed
         }
 
         /**drawing widest bounding rectangle to ret in blue**/
-        Imgproc.rectangle(img_copy, maxRect, Scalar(255.0, 0.0, 0.0), 2)
 
         /** checking if widest width is greater than equal to minimum width
          * using Kotlin if expression (Java ternary) to set height variable
@@ -115,8 +101,9 @@ class TeamShippingElementPipeline(barcode: FeedSource<Barcode>, op: AsyncOpMode)
          **/
         val inputWidth = input!!.size().width
         val center_threshold = (inputWidth * 0.01).toInt()
-        val right_threshold = (inputWidth * 0.5).toInt()
-        val barcode_pos = if (maxRect.width * maxRect.height > input!!.size().height * 0.1)
+        val right_threshold = (inputWidth * 0.375).toInt()
+        val is_valid_detection = maxRect.width > input!!.size().width * 0.12
+        val barcode_pos = if (is_valid_detection)
             when (maxRect.x) {
                 in right_threshold..Int.MAX_VALUE -> Barcode.Right
                 in center_threshold..right_threshold -> Barcode.Center
@@ -126,7 +113,19 @@ class TeamShippingElementPipeline(barcode: FeedSource<Barcode>, op: AsyncOpMode)
             barcode.update(barcode_pos)
         }
 
+        //drawing contours
+        input!!.copyTo(img_copy)
+        val area_color: Scalar = Scalar(255.0, 0.0, 0.0)
+        Imgproc.line(img_copy, Point(right_threshold.toDouble(), 0.0), Point(right_threshold.toDouble(), input!!.size().height), area_color, 4)
+        Imgproc.line(img_copy, Point(right_threshold.toDouble(), 0.0), Point(right_threshold.toDouble(), input!!.size().height), area_color, 4)
+        try { Imgproc.drawContours(img_copy, contours, -1, contour_color, 2) }
+        catch (e: Exception) { }
+        Imgproc.rectangle(img_copy, maxRect, if (is_valid_detection) { Scalar(0.0, 255.0, 0.0) } else { Scalar(255.0, 0.0, 0.0) }, 4)
+
         // releasing all mats after use
+        for (c: MatOfPoint in contours) {
+            c.release() // releasing the buffer of the contour, since after use, it is no longer needed
+        }
         hsv.release()
         dst.release()
         placeholder.release()
@@ -136,5 +135,8 @@ class TeamShippingElementPipeline(barcode: FeedSource<Barcode>, op: AsyncOpMode)
         op.telemetry.addData("Barcode", barcode_pos)
 
         return img_copy
+    }
+
+    fun release() {
     }
 }

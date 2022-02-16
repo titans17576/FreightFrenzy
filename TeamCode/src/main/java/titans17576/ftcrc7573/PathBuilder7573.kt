@@ -63,8 +63,8 @@ open class PathBuilder7573(initial_pose: Pose2d, factory: TrajectoryBuilderFacto
         return if (this.queue.isEmpty()) null else this.queue.getLast();
     }
 
-    protected fun new_movement(): TrajectorySequenceBuilder { return new_movement(false); }
-    protected fun new_movement(reversed: Boolean): TrajectorySequenceBuilder {
+    public fun new_movement(): TrajectorySequenceBuilder { return new_movement(false); }
+    public fun new_movement(reversed: Boolean): TrajectorySequenceBuilder {
         var starting_pose: Pose2d = initial_pose
         if (last_builder() != null) starting_pose = last_builder()!!.build().end()
         //TrajectoryBuilder builder = new TrajectoryBuilder(starting_pose, reversed, vel_constraint, accel_constraint);
