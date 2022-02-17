@@ -9,7 +9,7 @@ fun side(is_red: Boolean): Double { return if (is_red) { 1.0 } else { -1.0 } }
 
 fun TrajectorySequenceBuilder.spline_to_shipping_hub(is_red: Boolean): TrajectorySequenceBuilder {
     val side = side(is_red)
-    return this.splineTo(Vector2d(-12.0, -46 * side), 90.0.toRadians * side)
+    return this.splineTo(Vector2d(-12.0, -45 * side), 90.0.toRadians * side)
 }
 fun TrajectorySequenceBuilder.spline_to_depo(is_red: Boolean): TrajectorySequenceBuilder {
     val side = side(is_red)
@@ -29,7 +29,7 @@ fun move_to_carousel(b: PathBuilder7573, is_red: Boolean) {
             b.new_movement()
                 .setReversed(false)
                 .splineTo(Vector2d(-59.0, -59.0*side), (-130.0).toRadians * side)
-                .turn((30.0).toRadians)
+                //.turn((30.0).toRadians)
                 .build()
         )
     } else {
@@ -45,7 +45,7 @@ fun move_to_carousel(b: PathBuilder7573, is_red: Boolean) {
 
 class Barcode_Carousel_Park(is_red: Boolean, factory: TrajectoryBuilderFactory)
     : PathBuilder7573(Pose2d(
-    if (is_red) -24.0 else -40.0,
+    if (is_red) -28.0 else -40.0,
     -63.0 * side(is_red),
     90.0.toRadians * (if (is_red) 1.0 else -1.0)
 ), factory) {
@@ -73,7 +73,7 @@ class Barcode_Carousel_Park(is_red: Boolean, factory: TrajectoryBuilderFactory)
 
 class Carousel_Park(is_red: Boolean, factory: TrajectoryBuilderFactory)
     : PathBuilder7573(Pose2d(
-    if (is_red) -24.0 else -40.0,
+    if (is_red) -28.0 else -40.0,
     -63.0 * (if (is_red) 1.0 else -1.0),
     90.0.toRadians * (if (is_red) 1.0 else -1.0)
 ), factory) {
@@ -101,7 +101,7 @@ class Carousel_Park(is_red: Boolean, factory: TrajectoryBuilderFactory)
 
 class Barcode_Carousel_Warehouse_Park(is_red: Boolean, factory: TrajectoryBuilderFactory)
     : PathBuilder7573(Pose2d(
-    if (is_red) -24.0 else -40.0,
+    if (is_red) -28.0 else -40.0,
     -63.0 * (if (is_red) 1.0 else -1.0),
     90.0.toRadians * (if (is_red) 1.0 else -1.0)
 ), factory) {
@@ -133,7 +133,8 @@ class Barcode_Carousel_Warehouse_Park(is_red: Boolean, factory: TrajectoryBuilde
 class Barcode_Warehouse_Park(val is_red: Boolean, val factory: TrajectoryBuilderFactory)
     : PathBuilder7573 (
     Pose2d(
-        if (is_red) { 18.0 } else { 6.0 },
+        //if (is_red) { 18.0 } else { 6.0 },
+        if (is_red) { 6.0 } else { 6.0 },
         -63.0 * (if (is_red) 1.0 else -1.0),
         90.0.toRadians * (if (is_red) 1.0 else -1.0)
     ),

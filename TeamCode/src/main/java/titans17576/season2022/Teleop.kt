@@ -102,13 +102,17 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
     }
 
     suspend fun distance_sensor_subsystem() {
-        OP.start_event.await()
-        /*OP.while_live {
-            if (R.outtake_distance_sensor.getDistance(DistanceUnit.CM) < 2.5){
-                OP.gamepad1.rumble(0.25, 0.25, 750)
-                OP.wait_for { R.outtake_distance_sensor.getDistance(DistanceUnit.CM) > 2.5 && !OP.stop_event.has_fired() }
+        OP.launch {
+            OP.while_live(false) {
+                OP.log("Distance Sensor", R.outtake_distance_sensor.lightDetected)
             }
-        }*/
+        }
+        OP.start_event.await()
+        OP.while_live {
+            /*if (R.outtake_distance_sensor.lightDetected < 2.5){
+                OP.gamepad1.rumble(0.25, 0.25, 750)
+            }*/
+        }
     }
 
     suspend fun outtake_arm_subsystem() {

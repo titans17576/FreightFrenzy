@@ -51,8 +51,9 @@ abstract class AutoBase : DeferredAsyncOpMode {
             val barcode_feed = camera_init(OP)
             OP.while_live(false) {
                 if (OP.start_event.has_fired()) it();
-                OP.log("Barcode", barcode_feed.get_next(OP.mk_scope()))
+                OP.log("Barcode", barcode_feed.get_next(OP.mk_scope()), -1)
             }
+            OP.log("Barcode", barcode_feed.get_now(), -1)
             return barcode_feed.get_now()
         } catch(e: Exception) {
             println(e)
@@ -89,7 +90,7 @@ suspend fun deposit_freight(level: Int, distance: Double?, drive: RegionalsDrive
     if (distance != null) follow_trajectory_sequence(drive.trajectorySequenceBuilder(drive.poseEstimate).forward(distance).build(), drive, OP)
 }
 suspend fun deposit_level_3(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_3, 1.0, drive) }
-suspend fun deposit_level_2(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_2, 4.5, drive) }
+suspend fun deposit_level_2(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_2, 6.0, drive) }
 suspend fun deposit_level_1(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_2, null, drive) }
 
 suspend fun deposit_correct_level(barcode: Barcode, drive: RegionalsDrive) {
@@ -101,8 +102,8 @@ suspend fun deposit_correct_level(barcode: Barcode, drive: RegionalsDrive) {
 }
 
 suspend fun do_carousel(is_red: Boolean) {
-    val direction = if (is_red) { 1.0 } else { -1.0 }
-    R.carousel.power = CAROUSEL_MAXPOW * direction
+    val direction = if (is_red) { -1.0 } else { -1.0 }
+    R.carousel.power = (CAROUSEL_MAXPOW + CAROUSEL_MINPOW) / 2 * direction
     R.carousel.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
     delay(2000);
     R.carousel.power = 0.0;

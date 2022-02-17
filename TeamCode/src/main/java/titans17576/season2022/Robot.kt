@@ -30,15 +30,16 @@ val ARM_TRANSITION_RISING = 200;
 val ARM_TRANSITION_LOWERING = 425;
 val ARM_LEVEL_1: Int = 875;
 val ARM_LEVEL_2: Int = 522;
-val ARM_LEVEL_3: Int = 700;
+val ARM_LEVEL_3: Int = 750;
 val ARM_LEVEL_MAX: Int = 1000;
 val ARM_POWER_RESET: Double = -0.325;
 val ARM_POWER_COMMAND = 0.4
 val ARM_POWER_COMMAND_SLOW = 0.3
+val ARM_POWER_CORRECT = 0.7
 
 val BUCKET_LOADING = 0.21
-val BUCKET_TRANSITION_RISING = 0.17
-val BUCKET_TRANSITION_LOWERING = 0.165
+val BUCKET_TRANSITION_RISING = 0.13
+val BUCKET_TRANSITION_LOWERING = 0.13
 val BUCKET_DUMP = 0.73
 val BUCKET_BALANCED = 0.0
 val BUCKET_TRANSITION_FALLING = 0.07
@@ -64,7 +65,7 @@ public class Robot() {
 
     val outtake_arm = OP.hardwareMap.get("outtake_arm") as DcMotorEx
     val outtake_bucket = OP.hardwareMap.get("outtake_bucket") as Servo
-    //val outtake_distance_sensor = OP.hardwareMap.get("outtake_distance_sensor") as DistanceSensor
+    val outtake_distance_sensor = OP.hardwareMap.get("outtake_distance_sensor") as OpticalDistanceSensor
     val outtake_limit_switch = TouchSensor7573(OP.hardwareMap.get("outtake_arm_limit"))
     val carousel = OP.hardwareMap.get("carousel") as DcMotorEx
     val tse = OP.hardwareMap.get("tse") as Servo
@@ -161,6 +162,9 @@ public class Robot() {
             if (!wait_for_arm()) return;
                 if (OP.stop_event.has_fired() || !predicate()) return;
             }
+            outtake_arm.power = ARM_POWER_CORRECT
+            delay(100)
+            outtake_arm.power = command_power
             val real_bucket_position: Double
             if (bucket_position == null) {
                 if (target < ARM_TRANSITION_RISING) real_bucket_position = BUCKET_LOADING

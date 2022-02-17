@@ -9,7 +9,7 @@ import titans17576.ftcrc7573.TouchSensor7573
 
 class ServoTest(op: AsyncOpMode) : DeferredAsyncOpMode {
     val op = op
-    var servoright: Servo? = op.hardwareMap["tse"] as Servo
+    var servoright: Servo? = op.hardwareMap["outtake_bucket"] as Servo
     var servoname = ""
     //val servoleft = op.hardwareMap["outtake_left"] as Servo
     var position = 0.0
