@@ -1,5 +1,6 @@
 package titans17576.season2022
 
+import com.qualcomm.hardware.rev.Rev2mDistanceSensor
 import com.qualcomm.robotcore.hardware.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Semaphore
@@ -65,9 +66,11 @@ public class Robot() {
 
     val outtake_arm = OP.hardwareMap.get("outtake_arm") as DcMotorEx
     val outtake_bucket = OP.hardwareMap.get("outtake_bucket") as Servo
-    val outtake_distance_sensor = OP.hardwareMap.get("outtake_distance_sensor") as OpticalDistanceSensor
+    val outtake_distance_sensor = OP.hardwareMap.get("outtake_distance_sensor") as Rev2mDistanceSensor
     val outtake_limit_switch = TouchSensor7573(OP.hardwareMap.get("outtake_arm_limit"))
     val carousel = OP.hardwareMap.get("carousel") as DcMotorEx
+
+    val tse_commander = Semaphore(1)
     val tse = OP.hardwareMap.get("tse") as Servo
 
     init {

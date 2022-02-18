@@ -3,6 +3,7 @@ package titans17576.season2022
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.ServoImplEx
 import kotlinx.coroutines.delay
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import titans17576.ftcrc7573.DeferredAsyncOpMode
 import titans17576.ftcrc7573.OP
 import titans17576.ftcrc7573.Stopwatch
@@ -59,7 +60,6 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
         OP.start_event.await()
 
         var intake_power = 0.0
-        var tse_pos = TSE_RAISED
         R.attempt_servo_pwm(R.tse, true)
         OP.while_live {
             intake_power = 0.0
@@ -75,16 +75,6 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
             R.carousel.power = carousel_power
             if (philip) R.carousel.power += (OP.gamepad1.left_trigger - OP.gamepad1.right_trigger).toDouble() * CAROUSEL_MAXPOW
 
-            if (OP.gamepad1.y) {
-                tse_pos = TSE_RAISED
-            } else if (OP.gamepad1.b) {
-                tse_pos = TSE_LOWERED
-            } else if (OP.gamepad1.x) {
-                tse_pos = TSE_DEPLOY
-            } else if (OP.gamepad1.a) {
-                tse_pos -= 0.0075
-            }
-            R.tse.position = tse_pos
         }
     }
 
@@ -104,14 +94,24 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
     suspend fun distance_sensor_subsystem() {
         OP.launch {
             OP.while_live(false) {
-                OP.log("Distance Sensor", R.outtake_distance_sensor.lightDetected)
+                OP.log("Distance Sensor", R.outtake_distance_sensor.getDistance(DistanceUnit.CM).toString() + " CM")
             }
         }
         OP.start_event.await()
         OP.while_live {
-            /*if (R.outtake_distance_sensor.lightDetected < 2.5){
-                OP.gamepad1.rumble(0.25, 0.25, 750)
-            }*/
+            if (R.outtake_distance_sensor.getDistance(DistanceUnit.CM) < 3){
+                R.tse_commander.acquire()
+                val prev_pos = R.tse.position
+                R.tse.position = TSE_INSIDE
+                delay(250)
+                R.tse.position = prev_pos
+                delay(250)
+                R.tse.position = TSE_INSIDE
+                delay(250)
+                R.tse.position = prev_pos
+                delay(250)
+                R.tse_commander.release()
+            }
         }
     }
 
@@ -182,19 +182,21 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
     }
 
     suspend fun tse_arm_subsystem() {
+        var tse_pos = TSE_RAISED
         OP.start_event.await()
-        var tse_pos = TSE_RAISED;
         OP.while_live {
-            if (OP.gamepad2.dpad_right) {
-                if ((tse_pos - TSE_RAISED).absoluteValue < (tse_pos - TSE_LOWERED).absoluteValue) tse_pos =
-                    TSE_LOWERED
-                else tse_pos = TSE_RAISED
-                OP.wait_for { !OP.gamepad2.dpad_right }
-            } else if (OP.gamepad2.dpad_up) {
-                tse_pos -= 0.03
-            } else if (OP.gamepad2.dpad_down) {
-                tse_pos += 0.03
+            R.tse_commander.acquire()
+            if (OP.gamepad1.y) {
+                tse_pos = TSE_RAISED
+            } else if (OP.gamepad1.b) {
+                tse_pos = TSE_LOWERED
+            } else if (OP.gamepad1.x) {
+                tse_pos = TSE_DEPLOY
+            } else if (OP.gamepad1.a) {
+                tse_pos -= 0.0075
             }
+            R.tse.position = tse_pos
+            R.tse_commander.release()
         }
     }
 
