@@ -91,7 +91,7 @@ suspend fun deposit_freight(level: Int, distance: Double?, drive: RegionalsDrive
 }
 suspend fun deposit_level_3(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_3, 1.0, drive) }
 suspend fun deposit_level_2(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_2, 6.0, drive) }
-suspend fun deposit_level_1(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_2, null, drive) }
+suspend fun deposit_level_1(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_2, 1.5, drive) }
 
 suspend fun deposit_correct_level(barcode: Barcode, drive: RegionalsDrive) {
     when (barcode) {

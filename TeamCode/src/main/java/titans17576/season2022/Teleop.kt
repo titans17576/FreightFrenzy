@@ -44,7 +44,7 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
             var turn = OP.gamepad1.right_stick_x.toDouble()
             var strafe = OP.gamepad1.left_stick_x.toDouble()
 
-            val slow = if (OP.gamepad1.left_bumper || OP.gamepad2.left_bumper) 0.4 else 1.0
+            val slow = if (OP.gamepad1.left_bumper || OP.gamepad2.left_bumper) 0.3 else 1.0
 
             //POV drive (not tank)
             R.left_back.power = (drive + turn - strafe) * slow

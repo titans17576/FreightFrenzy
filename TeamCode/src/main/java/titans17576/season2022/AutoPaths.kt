@@ -17,8 +17,8 @@ fun TrajectorySequenceBuilder.spline_to_depo(is_red: Boolean): TrajectorySequenc
 }
 fun TrajectorySequenceBuilder.spline_to_warehouse(is_red: Boolean): TrajectorySequenceBuilder {
     val side = side(is_red)
-    this.splineTo(Vector2d(12.0, -65.0 * side), 0.0 * side)
-    this.splineTo(Vector2d(60.0, -65.0 * side), 0.0 * side)
+    this.splineTo(Vector2d(12.0, -70.0 * side), 0.0 * side)
+    this.splineTo(Vector2d(50.0, -72.0 * side), 0.0 * side)
     return this
 }
 
