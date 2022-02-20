@@ -37,7 +37,7 @@ abstract class AutoBase : DeferredAsyncOpMode {
             OP.log("Start Delay", seconds.toString() + " seconds", -1)
             if (OP.start_event.has_fired()) it()
         }
-        delay(seconds)
+        delay(seconds * 1000)
         try {
             OP.start_event.await()
             auto_start_event.fire()
@@ -77,7 +77,8 @@ abstract class AutoBase : DeferredAsyncOpMode {
 
 suspend fun deposit_freight(level: Int, distance: Double?, drive: RegionalsDrive) {
     if (distance != null) follow_trajectory_sequence(drive.trajectorySequenceBuilder(drive.poseEstimate).back(distance).build(), drive, OP)
-    R.command_outtake(level, null/*, delay_ms = 300*/);
+    val emergency_stop_one = Stopwatch()
+    R.command_outtake(level, null/*, delay_ms = 300*/) { emergency_stop_one.ellapsed() < 4000 };
     delay(200)
     R.outtake_bucket.position = BUCKET_DUMP
     delay(600)
@@ -102,10 +103,10 @@ suspend fun deposit_correct_level(barcode: Barcode, drive: RegionalsDrive) {
 }
 
 suspend fun do_carousel(is_red: Boolean) {
-    val direction = if (is_red) { -1.0 } else { -1.0 }
-    R.carousel.power = (CAROUSEL_MAXPOW + CAROUSEL_MINPOW) / 2 * direction
+    val direction = if (is_red) { -1.0 } else { 1.0 }
+    R.carousel.power = CAROUSEL_MINPOW * direction
     R.carousel.mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER
-    delay(2000);
+    delay(3000);
     R.carousel.power = 0.0;
     delay(200);
 }

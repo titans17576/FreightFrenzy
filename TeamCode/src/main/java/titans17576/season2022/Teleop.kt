@@ -99,18 +99,21 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
         }
         OP.start_event.await()
         OP.while_live {
-            if (R.outtake_distance_sensor.getDistance(DistanceUnit.CM) < 3){
+            val DISTANCE = 7
+            if (R.outtake_distance_sensor.getDistance(DistanceUnit.CM) < DISTANCE){
                 R.tse_commander.acquire()
                 val prev_pos = R.tse.position
                 R.tse.position = TSE_INSIDE
-                delay(250)
+                val delaydelay: Long = 275
+                delay(delaydelay)
                 R.tse.position = prev_pos
-                delay(250)
-                R.tse.position = TSE_INSIDE
-                delay(250)
+                delay(delaydelay)
+                /*R.tse.position = TSE_INSIDE
+                delay(delaydelay)
                 R.tse.position = prev_pos
-                delay(250)
+                delay(delaydelay)*/
                 R.tse_commander.release()
+                OP.wait_for { OP.gamepad2.right_bumper }
             }
         }
     }
