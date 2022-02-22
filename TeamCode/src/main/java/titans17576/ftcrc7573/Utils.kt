@@ -27,6 +27,20 @@ class Either<L: Any, R: Any> private constructor(is_left: Boolean, obj: Any) {
 val Double.toRadians: Double
     get() = this/180*Math.PI
 
+class Stopwatch {
+    private var _last_clicked = System.currentTimeMillis();
+    val last_clicked get() = _last_clicked
+    fun ellapsed(): Long {
+        return System.currentTimeMillis() - last_clicked
+    }
+    fun reset(): Long {
+        val now = System.currentTimeMillis()
+        val ret = now - last_clicked
+        _last_clicked = now
+        return ret
+    }
+}
+
 class TouchSensor7573(channel: DigitalChannel) {
     constructor(hardwareDevice: HardwareDevice) : this(hardwareDevice as DigitalChannel)
     val channel = channel;

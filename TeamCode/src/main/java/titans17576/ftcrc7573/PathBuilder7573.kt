@@ -19,6 +19,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
+/** A class that returns blank trajectory builders with the appropriate constraints */
 interface TrajectoryBuilderFactory {
     fun make_trajectory_builder(start: Pose2d, reversed: Boolean = false): TrajectoryBuilder
     fun make_trajectory_sequence_builder(start: Pose2d): TrajectorySequenceBuilder
@@ -50,31 +51,40 @@ fun RegionalsDrive.trajectory_builder_factory(): TrajectoryBuilderFactory {
     return MyBuilderRegionals()
 }
 
+/**
+ * Convenience class for building paths. Extend it, and use `new_movement` in your
+ * constructor.
+ * @param initial_pose - the starting position of the robot
+ * @param factory - the trajectory builder factory, which applies to the constraints to builders
+ */
 open class PathBuilder7573(initial_pose: Pose2d, factory: TrajectoryBuilderFactory) {
-    val initial_pose: Pose2d = initial_pose
-    /*var vel_constraint: TrajectoryVelocityConstraint = vel_constraint
-    var accel_constraint: TrajectoryAccelerationConstraint = accel_constraint
-    var max_vel: Double = max_vel
-    var max_acc: Double = max_acc*/
     private val factory = factory
     private var queue: ArrayDeque<TrajectorySequenceBuilder> = ArrayDeque()
+
+    /**
+     * The initial position for this path, passed from the constructor
+     */
+    val initial_pose: Pose2d = initial_pose
+
+    /**
+     * The built trajectories. Take them out with .poll
+     */
     val trajectories: Queue<TrajectorySequence> = LinkedList()
+
     fun last_builder(): TrajectorySequenceBuilder? {
         return if (this.queue.isEmpty()) null else this.queue.getLast();
     }
 
-    protected fun new_movement(): TrajectorySequenceBuilder { return new_movement(false); }
-    protected fun new_movement(reversed: Boolean): TrajectorySequenceBuilder {
+    /**
+     * Create a new movement, starting from the ending position of the last movement
+     * @param reversed - whether the robot should initially drive backwards
+     * @return the new builder
+     */
+    fun new_movement(reversed: Boolean = false): TrajectorySequenceBuilder {
         var starting_pose: Pose2d = initial_pose
         if (last_builder() != null) starting_pose = last_builder()!!.build().end()
-        //TrajectoryBuilder builder = new TrajectoryBuilder(starting_pose, reversed, vel_constraint, accel_constraint);
-        //var seq: TrajectorySequenceBuilder = TrajectorySequenceBuilder(starting_pose, this.vel_constraint, this.accel_constraint, this.max_vel, this.max_acc)
         var seq = factory.make_trajectory_sequence_builder(starting_pose).setReversed(reversed)
         queue.addLast(seq);
         return seq;
     }
-    //Continuity Exeptions go brrrr
-    /*protected TrajectoryBuilder continue_movement() {
-        return new TrajectoryBuilder(last_builder().build(), last_builder().build().duration(), constraints);
-    }*/
 }

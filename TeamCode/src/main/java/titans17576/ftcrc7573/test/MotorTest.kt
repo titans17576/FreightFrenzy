@@ -1,7 +1,5 @@
 package titans17576.ftcrc7573.test
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.DcMotorEx
 import com.qualcomm.robotcore.hardware.DcMotorSimple
@@ -25,7 +23,7 @@ class MotorTest(op: AsyncOpMode) : DeferredAsyncOpMode {
         }
     }
     suspend fun drive_subsystem(){
-        op.start_signal.await()
+        op.start_event.await()
         op.while_live{
 
             left_back.power = 0.0
@@ -59,7 +57,7 @@ class ReverseMotorTest(op: AsyncOpMode) : DeferredAsyncOpMode {
         }
     }
     suspend fun drive_subsystem(){
-        op.start_signal.await()
+        op.start_event.await()
         op.while_live{
             op.telemetry.addData("left_front", left_front.currentPosition)
             op.telemetry.addData("left_back", left_back.currentPosition)
@@ -82,7 +80,7 @@ class BadMotorTest(op: AsyncOpMode) : DeferredAsyncOpMode {
 
     suspend fun drive_subsystem() {
         left_front.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        op.start_signal.await()
+        op.start_event.await()
         left_front.mode = DcMotor.RunMode.RUN_USING_ENCODER
         op.while_live {
             left_front.power = op.gamepad1.left_stick_y.toDouble()
@@ -92,7 +90,7 @@ class BadMotorTest(op: AsyncOpMode) : DeferredAsyncOpMode {
     }
 
     suspend fun toggle_subsystem() {
-        op.start_signal.await()
+        op.start_event.await()
         op.while_live {
             if (op.gamepad1.y) {
                 if (left_front.direction == DcMotorSimple.Direction.FORWARD) left_front.direction = DcMotorSimple.Direction.REVERSE

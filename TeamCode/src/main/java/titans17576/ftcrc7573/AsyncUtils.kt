@@ -30,11 +30,11 @@ suspend fun<L: Any, R: Any> race(a: suspend () -> L, b: suspend () -> R, scope: 
     else return Result.failure(TimeoutException())
 }*/
 
-class Signal {
+/** Represents a logical event, occuring ideally once */
+class Event {
     private var result: Result<Unit>? = null
     internal var waiting: ArrayList<Continuation<Unit>> = ArrayList()
     internal val mutex = Mutex()
-
     private fun resume() {
         val mywaiting = waiting
         waiting = ArrayList()
@@ -42,51 +42,81 @@ class Signal {
             cont.resumeWith(result!!)
         }
     }
+
     private fun _greenlight() {
         result = Result.success(Unit)
         resume()
     }
-    public suspend fun greenlight() {
+    /**
+     * Fire the event
+     */
+    public suspend fun fire() {
         mutex.lock()
         _greenlight()
         mutex.unlock()
     }
-    public fun try_greenlight(): Boolean {
+
+    /**
+     * Attempt to fire the event without suspending
+     */
+    public fun try_fire(): Boolean {
         if (!mutex.tryLock()) return false
         _greenlight()
         mutex.unlock()
         return true
     }
+
     private fun _redlight() {
         result = null
     }
-    public suspend fun redlight() {
+
+    /**
+     * Cancel the event (AKA un-fire the event)
+     */
+    public suspend fun cancel() {
         mutex.lock()
         _redlight()
         mutex.unlock()
     }
-    public fun try_redlight(): Boolean {
+
+    /**
+     * Attempt to cancel the event without suspending
+     */
+    public fun try_cancel(): Boolean {
         if (!mutex.tryLock()) return false
         _redlight()
         mutex.unlock()
         return true
     }
+
     private fun _blow_up_everything(reason: Throwable) {
         result = Result.failure(reason)
         resume()
     }
-    public suspend fun blow_up_everything(reason: Throwable = Exception("Signal blew up")) {
+
+    /**
+     * Declare the event invalid
+     * @param reason - the throwable that will be thrown if anyone tries to .await the event
+     */
+    public suspend fun throw_exception(reason: Throwable = Exception("Signal blew up")) {
         mutex.lock()
         _blow_up_everything(reason)
         mutex.unlock()
     }
-    public fun try_blow_up_everything(reason: Throwable = Exception("Signal blew up")): Boolean {
+
+    /**
+     * Try to declare the event invalid without suspending
+     */
+    public fun try_throw_exception(reason: Throwable = Exception("Signal blew up")): Boolean {
         if (!mutex.tryLock()) return false
         _blow_up_everything(reason)
         mutex.unlock()
         return true
     }
 
+    /**
+     * Suspend until this event fires
+     */
     public suspend fun await() {
         mutex.lock()
         if (result == null) {
@@ -98,7 +128,11 @@ class Signal {
             mutex.unlock()
         }
     }
-    fun is_greenlight() : Boolean {
+
+    /**
+     * @return whether the event has fired or not
+     */
+    fun has_fired() : Boolean {
         return result != null;
     }
 }
@@ -126,7 +160,7 @@ class FeedSource<T>(value: T) {
 class FeedListener<T>(source: FeedSource<T>) {
     private var last_updated = -1
     private val source = source
-    private var signal: Signal? = null;
+    private var event: Event? = null;
     var value = source.value;
 
     public suspend fun get_next(scope: CoroutineScope): T {
@@ -152,6 +186,9 @@ class FeedListener<T>(source: FeedSource<T>) {
     public fun get_now() = value
 }
 
+/**
+ * Kotlin wrapper around camera.openCameraDeviceAsync
+ */
 suspend fun open_opencv_camera(camera: OpenCvCamera) {
     suspendCoroutine<Unit> {
         camera.openCameraDeviceAsync(object : OpenCvCamera.AsyncCameraOpenListener {
@@ -166,14 +203,24 @@ suspend fun open_opencv_camera(camera: OpenCvCamera) {
     }
 }
 
+/**
+ * Something that works with follow_trajectory_sequence
+ */
 interface Trajectoryable {
     fun followTrajectorySequenceAsync(trajectorySeq: TrajectorySequence)
     fun isBusy(): Boolean
     fun update()
 }
+
+/**
+ * Follow a trajectory sequence asynchronously.
+ * @param trajectorySeq - the sequence to follow
+ * @param drive - The RoadRunner drive to follow on
+ * @param op - The AsyncOpMode for a coroutine context
+ */
 suspend fun follow_trajectory_sequence(trajectorySeq: TrajectorySequence, drive: Trajectoryable, op: AsyncOpMode) {
     drive.followTrajectorySequenceAsync(trajectorySeq)
-    while (op.start_signal.is_greenlight() && !op.stop_signal.is_greenlight() && drive.isBusy()) {
+    while (op.start_event.has_fired() && !op.stop_event.has_fired() && drive.isBusy()) {
         drive.update()
         yield()
     }

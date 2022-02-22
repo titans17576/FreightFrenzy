@@ -29,7 +29,7 @@ class ScuffedDriveTrain(op: AsyncOpMode) : DeferredAsyncOpMode {
        op.launch { peripherals_subsystem() }
    }
     suspend fun drive_subsystem(){
-        op.start_signal.await()
+        op.start_event.await()
         op.while_live{
 
             op.telemetry.addData("LEFT", op.gamepad1.left_stick_y)
@@ -45,7 +45,7 @@ class ScuffedDriveTrain(op: AsyncOpMode) : DeferredAsyncOpMode {
     }
 
     suspend fun peripherals_subsystem() {
-        op.start_signal.await()
+        op.start_event.await()
         op.while_live {
             if (op.gamepad2.left_bumper) intake.power = -1.0
             else if (op.gamepad2.right_bumper) intake.power = 1.0

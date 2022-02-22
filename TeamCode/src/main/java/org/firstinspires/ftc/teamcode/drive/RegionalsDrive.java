@@ -48,6 +48,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import titans17576.ftcrc7573.Trajectoryable;
+import titans17576.season2022.Robot;
 
 /*
  * Simple mecanum drive hardware implementation for REV hardware.
@@ -100,10 +101,11 @@ public class RegionalsDrive extends MecanumDrive implements Trajectoryable {
         // upward (normal to the floor) using a command like the following:
         // BNO055IMUUtil.remapAxes(imu, AxesOrder.XYZ, AxesSigns.NPN);
 
-        leftFront = hardwareMap.get(DcMotorEx.class, "left_front");
-        leftRear = hardwareMap.get(DcMotorEx.class, "left_back");
-        rightRear = hardwareMap.get(DcMotorEx.class, "right_back");
-        rightFront = hardwareMap.get(DcMotorEx.class, "right_front");
+        Robot R = new Robot();
+        leftFront = R.getLeft_front();
+        leftRear = R.getLeft_back();
+        rightRear = R.getRight_back();
+        rightFront = R.getRight_front();
 
         motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
 
@@ -115,6 +117,8 @@ public class RegionalsDrive extends MecanumDrive implements Trajectoryable {
 
         if (RUN_USING_ENCODER) {
             setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        } else {
+            setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
 
         setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
