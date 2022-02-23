@@ -14,8 +14,9 @@ fun generated_op_mode_registrar(m: OpModeManager) {
 }
 
 fun freight_frenzy_regionals(){
-    register_defered_async_opmode("/17576/R/Teleop", false) { op -> titans17576.season2022.Teleop(false) }
-    register_defered_async_opmode("/17576/R/Teleop/Philip", false) { op -> titans17576.season2022.Teleop(true ) }
+    register_defered_async_opmode("/17576/R/Teleop", false) { op -> titans17576.season2022.Teleop(false, false) }
+    register_defered_async_opmode("/17576/R/Teleop/Logging", false) { op -> titans17576.season2022.Teleop(false, true) }
+    register_defered_async_opmode("/17576/R/Teleop/Philip", false) { op -> titans17576.season2022.Teleop(true, false) }
     register_defered_async_opmode("/17576/R/Red/Barcode-Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.BarcodeCarouselDepot(true)}
     register_defered_async_opmode("/17576/R/Blue/Barcode-Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.BarcodeCarouselDepot(false)}
     register_defered_async_opmode("/17576/R/Red/Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.CarouselDepot(true)}

@@ -1,16 +1,27 @@
 package titans17576.season2022
 
+import android.R.attr
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.ServoImplEx
 import kotlinx.coroutines.delay
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import titans17576.ftcrc7573.DeferredAsyncOpMode
-import titans17576.ftcrc7573.OP
+import titans17576.ftcrc7573    .OP
 import titans17576.ftcrc7573.Stopwatch
 import kotlin.math.absoluteValue
+import android.R.attr.data
+import com.acmerobotics.dashboard.FtcDashboard
+import java.io.BufferedOutputStream
+import java.io.BufferedWriter
+import java.io.OutputStreamWriter
+import java.lang.Exception
+import java.net.HttpURLConnection
+import java.net.URL
+import kotlin.concurrent.thread
+import kotlin.coroutines.suspendCoroutine
 
 
-class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
+class Teleop(val philip: Boolean, val enableLogging: Boolean) : DeferredAsyncOpMode {
     val R = Robot()
 
     override suspend fun op_mode() {
@@ -21,6 +32,7 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
         OP.launch { outtake_arm_subsystem() }
         OP.launch { tse_arm_subsystem() }
         OP.launch { outtake_manual_subsystem() }
+        if(enableLogging) OP.launch{logging_subsystem()}
     }
 
     suspend fun drive_subsystem() {
@@ -251,4 +263,45 @@ class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
             }
         }
     }
+
+    suspend fun logging_subsystem(){
+        OP.launch {
+            OP.while_live(false) {
+                OP.telemetry.speak("TEST");
+                delay(3000);
+            }
+        }
+        OP.while_live(false) {
+            FtcDashboard.getInstance().telemetry.addData("arm", R.outtake_arm.currentPosition)
+            FtcDashboard.getInstance().telemetry.update();
+            /*val arm_number_thing_position = (R.outtake_arm.currentPosition).toString()
+            val data = arm_number_thing_position + "\n"
+
+                suspendCoroutine<Unit> {
+                    val do_the_resume = it
+                    thread {
+                        try {
+                            val urlLOL = "http://192.168.43.252:8080/push"
+                            val url = URL(urlLOL)
+                            val urlConnection: HttpURLConnection = url.openConnection() as HttpURLConnection
+                            urlConnection.requestMethod = "POST"
+                            val out = BufferedOutputStream(urlConnection.outputStream)
+
+                            val writer = BufferedWriter(OutputStreamWriter(out, "UTF-8"))
+                            writer.write(data);
+                            writer.flush()
+                            writer.close()
+                            out.close()
+
+                            urlConnection.connect()
+                            do_the_resume.resumeWith(Result.success(Unit));
+                        }catch (e:Exception){
+                            OP.launch { OP.log("error", e, -1) }
+                            do_the_resume.resumeWith(Result.failure(e))
+                        }
+                    }
+                }*/
+        }
+    }
+
 }
