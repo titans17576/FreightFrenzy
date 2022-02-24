@@ -1,16 +1,27 @@
 package titans17576.season2022
 
+import android.R.attr
 import com.qualcomm.robotcore.hardware.DcMotor
 import com.qualcomm.robotcore.hardware.ServoImplEx
 import kotlinx.coroutines.delay
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import titans17576.ftcrc7573.DeferredAsyncOpMode
-import titans17576.ftcrc7573.OP
+import titans17576.ftcrc7573    .OP
 import titans17576.ftcrc7573.Stopwatch
 import kotlin.math.absoluteValue
+import android.R.attr.data
+import com.acmerobotics.dashboard.FtcDashboard
+import java.io.BufferedOutputStream
+import java.io.BufferedWriter
+import java.io.OutputStreamWriter
+import java.lang.Exception
+import java.net.HttpURLConnection
+import java.net.URL
+import kotlin.concurrent.thread
+import kotlin.coroutines.suspendCoroutine
 
 
-class Teleop(val philip: Boolean) : DeferredAsyncOpMode {
+class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyncOpMode {
     val R = Robot()
 
     /**
