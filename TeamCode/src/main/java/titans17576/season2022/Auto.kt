@@ -18,6 +18,7 @@ abstract class AutoBase : DeferredAsyncOpMode {
     val R = Robot()
     lateinit var barcode: Deferred<Barcode>
 
+    /** An event fired after a potential configurable delay */
     val auto_start_event = Event();
 
     override suspend fun op_mode() {
@@ -27,8 +28,14 @@ abstract class AutoBase : DeferredAsyncOpMode {
         OP.launch { auto() }
     }
 
+    /**
+     * Listens to the gamepad before start to configure a
+     * start delay, then fires `auto_start_event` after OP
+     * mode start and the delay
+     */
     suspend fun start_event() {
         var seconds: Long = 0
+
         OP.while_live(false) {
             if (OP.gamepad1.dpad_up) {
                 seconds += 1
@@ -38,9 +45,13 @@ abstract class AutoBase : DeferredAsyncOpMode {
                 OP.wait_for { !OP.gamepad1.dpad_down }
             }
             OP.log("Start Delay", seconds.toString() + " seconds", -1)
+
+            //Break when the op mode starts
             if (OP.start_event.has_fired()) it()
         }
+
         delay(seconds * 1000)
+        //Wrap in a try catch loop to pass exceptions through to auto_start_event
         try {
             OP.start_event.await()
             auto_start_event.fire()
@@ -49,6 +60,10 @@ abstract class AutoBase : DeferredAsyncOpMode {
         }
     }
 
+    /**
+     * Manages the the camera lifecycle and fetching the fianl value
+     * for the rest of the OP mode
+     */
     suspend fun camera(): Barcode {
         try {
             val barcode_feed = camera_init(OP)
@@ -63,11 +78,14 @@ abstract class AutoBase : DeferredAsyncOpMode {
             e.printStackTrace()
         } finally {
             try { camera_disable(OP) }
-            catch(e: Exception) { print(e); e.printStackTrace() }
+            catch(e: Exception) { print(e); e.printStackTrace() } //Just incase
         }
         return Barcode.Center
     }
 
+    /**
+     * Raise the TSE when the OP mode starts so it's out of the way of the arm
+     */
     suspend fun peripherals() {
         OP.start_event.await()
         R.tse.position = TSE_RAISED
@@ -75,28 +93,45 @@ abstract class AutoBase : DeferredAsyncOpMode {
         R.tse.position = TSE_RAISED
     }
 
+    /** Put your auto code in here, and wait for auto_start_event */
     abstract suspend fun auto()
 }
 
+/**
+ * Deposit freight with a given arm level, and optionally crawl forward a distance
+ * to approach the team hub
+ */
 suspend fun deposit_freight(level: Int, distance: Double?, drive: RegionalsDrive) {
     if (distance != null) follow_trajectory_sequence(drive.trajectorySequenceBuilder(drive.poseEstimate).back(distance).build(), drive, OP)
+
+    //Allow a maxinum amount of 4 seconds incase the arm dies on the way
     val emergency_stop_one = Stopwatch()
-    R.command_outtake(level, null/*, delay_ms = 300*/) { emergency_stop_one.ellapsed() < 4000 };
+    R.command_outtake(level, null) { emergency_stop_one.ellapsed() < 4000 };
     delay(200)
+
+    //Dump the bucket
     R.outtake_bucket.position = BUCKET_DUMP
     delay(600)
+
+    //Reset the bucket as the arm retracts
     val emergency_stop = Stopwatch()
     R.command_outtake(ARM_LOADING) { emergency_stop.ellapsed() < 2000 }
     R.outtake_arm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+
+    //Chuck the TSE arm to the inside of the robot, so when PWM dies
+    //it doesn't fall forward
     R.tse.position = TSE_INSIDE
     delay(50)
+    //Kill PWM, I think for all servos. This is to ensure that if the bucket is stuck
+    //it isn't straining til the end of time
     R.attempt_servo_pwm(R.outtake_bucket, false)
+
     if (distance != null) follow_trajectory_sequence(drive.trajectorySequenceBuilder(drive.poseEstimate).forward(distance).build(), drive, OP)
 }
+
 suspend fun deposit_level_3(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_3, 1.0, drive) }
 suspend fun deposit_level_2(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_2, 6.0, drive) }
 suspend fun deposit_level_1(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_2, 1.5, drive) }
-
 suspend fun deposit_correct_level(barcode: Barcode, drive: RegionalsDrive) {
     when (barcode) {
         Barcode.Left -> deposit_level_1(drive)
@@ -105,6 +140,9 @@ suspend fun deposit_correct_level(barcode: Barcode, drive: RegionalsDrive) {
     }
 }
 
+/**
+ * Spin the carousel, score a duck, celebrate :D
+ */
 suspend fun do_carousel(is_red: Boolean) {
     val direction = if (is_red) { -1.0 } else { 1.0 }
     R.carousel.power = CAROUSEL_MINPOW * direction
@@ -148,9 +186,7 @@ class CarouselDepot(is_red: Boolean) : AutoBase() {
         val path = Carousel_Park(is_red, bot.trajectory_builder_factory())
         bot.poseEstimate = path.initial_pose
 
-        //val barcode_eventually = op.async { get_grasshopper_location(op, this) }
         auto_start_event.await()
-        //val barcode = barcode_eventually.await()
 
         //drive to carousel
         follow_trajectory_sequence(path.trajectories.poll()!!, bot, OP)
@@ -169,9 +205,7 @@ class BarcodeCarouselWarehousePark(is_red: Boolean) : AutoBase() {
         val path = Barcode_Carousel_Warehouse_Park(is_red, bot.trajectory_builder_factory())
         bot.poseEstimate = path.initial_pose
 
-        //val barcode_eventually = op.async { get_grasshopper_location(op, this) }
         auto_start_event.await()
-        //val barcode = barcode_eventually.await()
 
         //drive to hub
         follow_trajectory_sequence(path.trajectories.poll()!!, bot, OP)

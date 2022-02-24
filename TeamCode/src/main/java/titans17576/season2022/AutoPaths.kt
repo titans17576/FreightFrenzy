@@ -15,10 +15,11 @@ fun TrajectorySequenceBuilder.spline_to_depo(is_red: Boolean): TrajectorySequenc
     val side = side(is_red)
     return this.splineTo(Vector2d(-60.0, -37.0 * side), 90.0.toRadians * side)
 }
+
 fun TrajectorySequenceBuilder.spline_to_warehouse(is_red: Boolean): TrajectorySequenceBuilder {
     val side = side(is_red)
-    this.splineTo(Vector2d(12.0, -70.0 * side), 0.0 * side)
-    this.splineTo(Vector2d(50.0, -72.0 * side), 0.0 * side)
+    this.splineTo(Vector2d(12.0, -65.0 * side), 0.0 * side)
+    this.splineTo(Vector2d(50.0, -65.0 * side), 0.0 * side)
     return this
 }
 
@@ -156,3 +157,44 @@ class Barcode_Warehouse_Park(val is_red: Boolean, val factory: TrajectoryBuilder
         )
     }
 }
+
+class Barcode_Warehouse_Twice_Park(is_red: Boolean, factory: TrajectoryBuilderFactory)
+    : PathBuilder7573(Pose2d(
+    if (is_red) -28.0 else -40.0,
+    -63.0 * side(is_red),
+    90.0.toRadians * (if (is_red) 1.0 else -1.0)
+), factory) {
+    val side = side(is_red)
+
+    init {
+        trajectories.add(
+            new_movement()
+                .setReversed(false)
+                .forward(11.0)
+                .turn(180.0.toRadians)
+                .setReversed(true)
+                .spline_to_shipping_hub(is_red)
+                .build()
+        )
+
+        var counter = 0;
+
+        while(counter < 3){
+            trajectories.add(
+                new_movement()
+                    .spline_to_warehouse(is_red)
+                    .back(40.0)
+                    .spline_to_shipping_hub(is_red)
+                    .build()
+            )
+            counter++
+        }
+
+        trajectories.add(
+            new_movement()
+            .spline_to_warehouse(is_red)
+            .build()
+        )
+    }
+}
+

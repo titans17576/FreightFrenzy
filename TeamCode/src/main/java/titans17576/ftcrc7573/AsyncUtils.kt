@@ -13,11 +13,13 @@ import kotlin.coroutines.Continuation
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-
-suspend fun<L: Any, R: Any> race(a: suspend () -> L, b: suspend () -> R, scope: CoroutineScope) : Either<L, R> {
+/**
+ * Race two coroutines
+ */
+suspend fun<L: Any, R: Any> race(left: suspend () -> L, right: suspend () -> R, scope: CoroutineScope) : Either<L, R> {
     val channel = Channel<Either<L, R>>(1)
-    scope.launch { channel.send(Either.Left(a())) }
-    scope.launch { channel.send(Either.Right(b())) }
+    scope.launch { channel.send(Either.Left(left())) }
+    scope.launch { channel.send(Either.Right(right())) }
     return channel.receive()
 }
 
@@ -30,7 +32,7 @@ suspend fun<L: Any, R: Any> race(a: suspend () -> L, b: suspend () -> R, scope: 
     else return Result.failure(TimeoutException())
 }*/
 
-/** Represents a logical event, occuring ideally once */
+/** Represents a logical event, occurring ideally once */
 class Event {
     private var result: Result<Unit>? = null
     internal var waiting: ArrayList<Continuation<Unit>> = ArrayList()

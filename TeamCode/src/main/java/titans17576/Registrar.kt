@@ -2,10 +2,12 @@ package titans17576
 
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManager
 import com.qualcomm.robotcore.eventloop.opmode.OpModeRegistrar
+import org.checkerframework.framework.qual.Unused
 import titans17576.ftcrc7573.*
 import kotlin.reflect.KClass
 
 @OpModeRegistrar
+@Suppress("unused")
 fun generated_op_mode_registrar(m: OpModeManager) {
     current_op_mode_manager = m
     freight_frenzy_regionals()
@@ -39,4 +41,3 @@ fun ftcrc7573_tests() {
 
 fun op_modes_other() {
 }
-
