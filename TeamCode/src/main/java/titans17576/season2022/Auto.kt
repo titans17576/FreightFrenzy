@@ -11,6 +11,9 @@ import titans17576.freightfrenzy.meet2.camera_init
 import titans17576.ftcrc7573.*
 import titans17576.season2022.*
 
+/**
+ * Base class for auto code, handles vision and a configurable delay
+ */
 abstract class AutoBase : DeferredAsyncOpMode {
     val R = Robot()
     lateinit var barcode: Deferred<Barcode>

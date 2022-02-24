@@ -9,23 +9,7 @@ import titans17576.ftcrc7573.OP
 import titans17576.ftcrc7573.TouchSensor7573
 import kotlin.math.absoluteValue
 
-//Variables for holding the cube
-val CLAMP_POS_HOLD_CUBE: Double = 0.47
-val CLAMP_POS_HOLD_BALL: Double = 0.43
-val CLAMP_POS_RELEASE: Double = 0.25
-val CLAMP_POS_NEUTRAL: Double = 0.33
-
-//Lift heights
-val lift_lvl1 = 0;
-val lift_lvl2 = -400;
-val lift_lvl3 = -750;
-
-//Outtake arm positions
-val OUTTAKE_POSITION_INSIDE: Double = 0.01
-val OUTTAKE_POSITION_VERTICAL: Double = 0.34
-val OUTTAKE_POSITION_OUTSIDE: Double = 0.57
-val OUTTAKE_POSITION_OUTSIDE_HORIZONTAL: Double = 0.67
-
+//Arm positions in encoder ticks
 val ARM_LOADING: Int = 0;
 val ARM_TRANSITION_RISING = 200;
 val ARM_TRANSITION_LOWERING = 260;
@@ -33,11 +17,13 @@ val ARM_LEVEL_1: Int = 975;
 val ARM_LEVEL_2: Int = 522;
 val ARM_LEVEL_3: Int = 750;
 val ARM_LEVEL_MAX: Int = 1000;
+//Arm motor powers
 val ARM_POWER_RESET: Double = -0.325;
 val ARM_POWER_COMMAND = 0.4
 val ARM_POWER_COMMAND_SLOW = 0.3
 val ARM_POWER_CORRECT = 0.7
 
+//Bucket servo positions
 val BUCKET_LOADING = 0.21
 val BUCKET_TRANSITION_RISING = 0.13
 val BUCKET_TRANSITION_LOWERING = 0.13
@@ -45,63 +31,69 @@ val BUCKET_DUMP = 0.73
 val BUCKET_BALANCED = 0.0
 val BUCKET_TRANSITION_FALLING = 0.07
 
+//TSE arm servo positions
 val TSE_RAISED = 0.5
 val TSE_DEPLOY = 0.36
 val TSE_LOWERED = 0.03
 val TSE_INSIDE = 0.75
 
+//Carousel motor powers
 val CAROUSEL_MAXPOW = 0.6
 val CAROUSEL_MINPOW = 0.3
 
-public lateinit var R: Robot
+lateinit var R: Robot
 
-public class Robot() {
-
+class Robot() {
+    //Drive train motors
     val left_front = OP.hardwareMap.get("left_front") as DcMotorEx
     val left_back = OP.hardwareMap.get("left_back") as DcMotorEx
     val right_front = OP.hardwareMap.get("right_front") as DcMotorEx
     val right_back = OP.hardwareMap.get("right_back") as DcMotorEx
 
+    //Intake peripherals
     val intake_motor = OP.hardwareMap.get("intake") as DcMotorEx
 
-    val outtake_commander: Semaphore = Semaphore(1)
+    //Outtake peripherals
     val outtake_arm = OP.hardwareMap.get("outtake_arm") as DcMotorEx
     val outtake_bucket = OP.hardwareMap.get("outtake_bucket") as Servo
     val outtake_distance_sensor = OP.hardwareMap.get("outtake_distance_sensor") as Rev2mDistanceSensor
     val outtake_limit_switch = TouchSensor7573(OP.hardwareMap.get("outtake_arm_limit"))
+    //Semaphore to control access to outtake peripherals
+    val outtake_commander: Semaphore = Semaphore(1)
+
+    //Carousel peripherals
     val carousel = OP.hardwareMap.get("carousel") as DcMotorEx
 
-    val tse_commander = Semaphore(1)
+    //TSE peripherals
     val tse = OP.hardwareMap.get("tse") as Servo
+    //Semaphore to control access to outtake peripherals
+    val tse_commander = Semaphore(1)
 
     init {
+        //Configure and reset all drive motors
         left_front.direction = DcMotorSimple.Direction.FORWARD
-        left_back.direction = DcMotorSimple.Direction.FORWARD
-        right_front.direction = DcMotorSimple.Direction.REVERSE
-        right_back.direction = DcMotorSimple.Direction.REVERSE
-        outtake_arm.direction = DcMotorSimple.Direction.REVERSE
-
-        left_front.targetPosition = 0;
-        left_back.targetPosition = 0;
-        right_front.targetPosition = 0;
-        right_back.targetPosition = 0;
-
-
         left_front.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        left_back.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        right_front.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        right_back.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        outtake_arm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-
         left_front.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        left_back.direction = DcMotorSimple.Direction.FORWARD
+        left_back.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         left_back.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        right_front.direction = DcMotorSimple.Direction.REVERSE
+        right_front.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         right_front.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
+        right_back.direction = DcMotorSimple.Direction.REVERSE
+        right_back.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
         right_back.zeroPowerBehavior = DcMotor.ZeroPowerBehavior.BRAKE
 
+        //Configure and reset the outtake motor
+        outtake_arm.direction = DcMotorSimple.Direction.REVERSE
+        outtake_arm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+
+        //Configure, initialize, and disable the TSE arm servo
         tse.direction = Servo.Direction.REVERSE
         tse.position = TSE_RAISED
         attempt_servo_pwm(tse, false)
 
+        //Set the global R variable
         R = this
     }
 
@@ -154,8 +146,8 @@ public class Robot() {
                     target < ARM_TRANSITION_LOWERING && outtake_arm.currentPosition >= ARM_TRANSITION_LOWERING
                 //If the target is beyond the transition point, go to the transition point first and transition
                 if (is_rising || is_falling) {
+                    //Tuck bucket in for going down(?)
                     if (is_falling) {
-                        //Tuck bucket in for going down(?)
                         outtake_bucket.position = BUCKET_TRANSITION_FALLING
                         delay(delay_ms)
                     }
