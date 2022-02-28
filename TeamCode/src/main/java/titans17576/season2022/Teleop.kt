@@ -77,7 +77,14 @@ class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyn
             intake_power += OP.gamepad1.right_trigger
             intake_power -= OP.gamepad1.left_trigger
             intake_power += OP.gamepad2.left_stick_y
-            R.intake_motor.power = intake_power
+
+            if (R.intake_commander.tryAcquire()) {
+                try {
+                    R.intake_motor.power = intake_power
+                } finally {
+                    R.intake_commander.release()
+                }
+            }
 
             var carousel_power =
                 (OP.gamepad2.left_trigger - OP.gamepad2.right_trigger).toDouble() * CAROUSEL_MAXPOW
@@ -85,6 +92,9 @@ class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyn
                 CAROUSEL_MINPOW * Math.sin(carousel_power)
             R.carousel.power = carousel_power
             if (philip) R.carousel.power += (OP.gamepad1.left_trigger - OP.gamepad1.right_trigger).toDouble() * CAROUSEL_MAXPOW
+
+            if (OP.gamepad2.dpad_up) R.outtake_clamp.position = BUCKET_CLAMP_RELEASE
+            else if (OP.gamepad2.dpad_down) R.outtake_clamp.position = BUCKET_CLAMP_CLAMPING
         }
     }
 
@@ -108,6 +118,18 @@ class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyn
         OP.while_live {
             val DISTANCE = 7
             if (R.outtake_distance_sensor.getDistance(DistanceUnit.CM) < DISTANCE){
+                R.outtake_clamp.position = BUCKET_CLAMP_CLAMPING
+                OP.launch {
+                    R.intake_commander.acquire()
+                    try {
+                        R.intake_motor.power = -1.0
+                        delay(600)
+                        R.intake_motor.power = 0.0
+                    } finally {
+                        R.intake_commander.release()
+                    }
+                }
+
                 R.tse_commander.acquire()
                 val prev_pos = R.tse.position
                 R.tse.position = TSE_INSIDE
@@ -150,6 +172,7 @@ class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyn
                 R.outtake_commander.acquire()
                 try {
                     R.outtake_bucket.position = BUCKET_DUMP
+                    R.outtake_clamp.position = BUCKET_CLAMP_RELEASE
                     OP.wait_for { !wants_dump() }
                     R.outtake_bucket.position = BUCKET_BALANCED
                     delay(300)

@@ -11,25 +11,29 @@ import kotlin.math.absoluteValue
 
 //Arm positions in encoder ticks
 val ARM_LOADING: Int = 0;
-val ARM_TRANSITION_RISING = 200;
-val ARM_TRANSITION_LOWERING = 260;
+val ARM_TRANSITION_RISING = 475;
+val ARM_TRANSITION_LOWERING = 475;
 val ARM_LEVEL_1: Int = 975;
 val ARM_LEVEL_2: Int = 522;
 val ARM_LEVEL_3: Int = 750;
 val ARM_LEVEL_MAX: Int = 1000;
 //Arm motor powers
 val ARM_POWER_RESET: Double = -0.325;
-val ARM_POWER_COMMAND = 0.4
+val ARM_POWER_COMMAND = 0.7
 val ARM_POWER_COMMAND_SLOW = 0.3
 val ARM_POWER_CORRECT = 0.7
 
 //Bucket servo positions
-val BUCKET_LOADING = 0.21
+val BUCKET_LOADING = 0.25
 val BUCKET_TRANSITION_RISING = 0.13
 val BUCKET_TRANSITION_LOWERING = 0.13
 val BUCKET_DUMP = 0.73
 val BUCKET_BALANCED = 0.0
 val BUCKET_TRANSITION_FALLING = 0.07
+
+//Bucket clamp servo positions
+val BUCKET_CLAMP_CLAMPING = 0.02
+val BUCKET_CLAMP_RELEASE = 0.5
 
 //TSE arm servo positions
 val TSE_RAISED = 0.5
@@ -52,12 +56,15 @@ class Robot() {
 
     //Intake peripherals
     val intake_motor = OP.hardwareMap.get("intake") as DcMotorEx
+    //Intake usage control
+    val intake_commander = Semaphore(1)
 
     //Outtake peripherals
     val outtake_arm = OP.hardwareMap.get("outtake_arm") as DcMotorEx
     val outtake_bucket = OP.hardwareMap.get("outtake_bucket") as Servo
     val outtake_distance_sensor = OP.hardwareMap.get("outtake_distance_sensor") as Rev2mDistanceSensor
     val outtake_limit_switch = TouchSensor7573(OP.hardwareMap.get("outtake_arm_limit"))
+    val outtake_clamp = OP.hardwareMap.get("outtake_clamp") as Servo
     //Semaphore to control access to outtake peripherals
     val outtake_commander: Semaphore = Semaphore(1)
 
@@ -114,7 +121,51 @@ class Robot() {
      * @param predicate - a boolean to check continuously, the automation will break if it returns false
      */
     suspend fun command_outtake(target: Int, bucket_position: Double? = null, delay_ms: Long = 200, threshold: Int = 10, command_power: Double = ARM_POWER_COMMAND, predicate: () -> Boolean = { true }) {
-        outtake_commander.acquire() //Acquire permission to use the arm
+        outtake_commander.acquire()
+        var alive = true
+        try {
+            //Wait for the arm to raech the target position within the desired threshold
+            //Returns true if it succeeded, returns false it if was interrupted by the user,
+            //the predicate function, or emergency controls
+            suspend fun wait_for_arm(): Boolean {
+                if (!automation_allowed()) return false;
+                while ((outtake_arm.currentPosition - outtake_arm.targetPosition).absoluteValue > threshold) {
+                    OP.log("Bucket Position", R.outtake_bucket.position, -1);
+                    OP.log("Arm Position Current", R.outtake_arm.currentPosition, -1);
+                    if (OP.stop_event.has_fired() || !predicate() || !automation_allowed()) return false;
+                    yield();
+                }
+                return true;
+            }
+
+            val real_bucket_position: Double
+            if (bucket_position == null) {
+                if (target < ARM_TRANSITION_RISING) real_bucket_position = BUCKET_LOADING
+                else real_bucket_position = BUCKET_DUMP
+            } else {
+                real_bucket_position = bucket_position
+            }
+
+            R.outtake_arm.targetPosition = target
+            R.outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION
+            R.outtake_arm.power = ARM_POWER_COMMAND
+            OP.launch {
+                OP.while_live {
+                    if (!alive) it()
+                    if (R.outtake_arm.currentPosition > ARM_TRANSITION_RISING) {
+                        R.outtake_bucket.position = real_bucket_position
+                        it()
+                    }
+                }
+            }
+            wait_for_arm()
+
+            R.outtake_bucket.position = real_bucket_position
+        } finally {
+            alive = false
+            outtake_commander.release()
+        }
+        /*outtake_commander.acquire() //Acquire permission to use the arm
         try {
             if (!automation_allowed()) return;
             OP.log("Arm Position Target", target, -1);
@@ -180,12 +231,7 @@ class Robot() {
 
             //Set bucket position
             val real_bucket_position: Double
-            if (bucket_position == null) {
-                if (target < ARM_TRANSITION_RISING) real_bucket_position = BUCKET_LOADING
-                else real_bucket_position = BUCKET_BALANCED
-            } else {
-                real_bucket_position = bucket_position
-            }
+
             outtake_bucket.position = real_bucket_position
             delay(delay_ms)
 
@@ -194,7 +240,7 @@ class Robot() {
 
         } finally {
             outtake_commander.release()
-        }
+        }*/
     }
 
     /**
