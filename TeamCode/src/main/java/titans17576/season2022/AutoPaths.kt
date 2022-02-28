@@ -118,6 +118,7 @@ class Barcode_Carousel_Warehouse_Park(is_red: Boolean, factory: TrajectoryBuilde
                 .spline_to_shipping_hub(is_red)
                 .build()
         )
+
         move_to_carousel(this, is_red)
         trajectories.add(
             new_movement()
@@ -184,6 +185,11 @@ class Barcode_Warehouse_Twice_Park(is_red: Boolean, factory: TrajectoryBuilderFa
                 new_movement()
                     .spline_to_warehouse(is_red)
                     .back(40.0)
+                    .build()
+            )
+
+            trajectories.add(
+                new_movement()
                     .spline_to_shipping_hub(is_red)
                     .build()
             )
@@ -192,9 +198,52 @@ class Barcode_Warehouse_Twice_Park(is_red: Boolean, factory: TrajectoryBuilderFa
 
         trajectories.add(
             new_movement()
-            .spline_to_warehouse(is_red)
-            .build()
+                .spline_to_warehouse(is_red)
+                .back(5.0)
+                .build()
         )
     }
 }
 
+class Barcode_Carousel_Element_Park(is_red: Boolean, factory: TrajectoryBuilderFactory)
+    : PathBuilder7573(Pose2d(
+    if (is_red) -28.0 else -40.0,
+    -63.0 * side(is_red),
+    90.0.toRadians * (if (is_red) 1.0 else -1.0)
+), factory) {
+    val side = side(is_red)
+
+    init {
+        trajectories.add(
+            new_movement()
+                .spline_to_shipping_hub(is_red)
+                .build()
+        )
+
+        var counter = 0;
+
+        while(counter < 2){
+            trajectories.add(
+                new_movement()
+                    .spline_to_warehouse(is_red)
+                    .back(40.0)
+                    .spline_to_shipping_hub(is_red)
+                    .build()
+            )
+            counter++
+        }
+
+        trajectories.add(
+            new_movement()
+                .back(4.0)
+                .splineTo(Vector2d(-60.0, -63.0 * side), 180.0.toRadians * side)
+                .build()
+        )
+
+        trajectories.add(
+            new_movement()
+                .splineTo(Vector2d(-60.0, -35.0 * side), 90.0.toRadians * side)
+                .build()
+        )
+    }
+}

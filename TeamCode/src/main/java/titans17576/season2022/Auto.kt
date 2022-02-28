@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.hardware.DcMotor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.delay
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
 import org.firstinspires.ftc.teamcode.drive.RegionalsDrive
 import titans17576.freightfrenzy.meet2.Barcode
 import titans17576.freightfrenzy.meet2.camera_disable
@@ -139,6 +140,18 @@ suspend fun deposit_correct_level(barcode: Barcode, drive: RegionalsDrive) {
         Barcode.Right -> deposit_level_3(drive)
     }
 }
+suspend fun intake_elements(drive: RegionalsDrive){
+    R.outtake_clamp.position = BUCKET_CLAMP_RELEASE;
+    OP.while_live {
+        R.intake_motor.power = 1.0
+
+        if(R.outtake_distance_sensor.getDistance(DistanceUnit.CM) < DISTANCE_SENSOR_POSITION){
+            R.outtake_clamp.position = BUCKET_CLAMP_CLAMPING;
+            R.intake_motor.power = 0.0
+            it();
+        }
+    }
+}
 
 /**
  * Spin the carousel, score a duck, celebrate :D
@@ -238,6 +251,33 @@ class BarcodeWarehousePark(val is_red: Boolean) : AutoBase() {
         deposit_correct_level(barcode.await(), bot)
 
         //Park
+        follow_trajectory_sequence(path.trajectories.poll()!!, bot, OP);
+    }
+}
+
+class BarcodeWarehouseTwicePark(val is_red: Boolean) : AutoBase() {
+
+    override suspend fun auto() {
+        val bot = RegionalsDrive(OP.hardwareMap)
+        val path = Barcode_Warehouse_Twice_Park(is_red, bot.trajectory_builder_factory())
+        bot.poseEstimate = path.initial_pose
+
+        auto_start_event.await()
+
+        //Detects and deposits the barcode
+        follow_trajectory_sequence(path.trajectories.poll()!!, bot, OP);
+        deposit_correct_level(barcode.await(), bot)
+
+        //Goes to the warehouse, and then goes to deposit level 3
+        for (i in 1..3){
+            follow_trajectory_sequence(path.trajectories.poll()!!, bot, OP);
+            intake_elements(bot);
+
+            follow_trajectory_sequence(path.trajectories.poll()!!, bot, OP);
+            deposit_level_3(bot);
+        }
+
+        //Goes to the warehouse again
         follow_trajectory_sequence(path.trajectories.poll()!!, bot, OP);
     }
 }

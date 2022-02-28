@@ -44,6 +44,7 @@ val TSE_INSIDE = 0.75
 //Carousel motor powers
 val CAROUSEL_MAXPOW = 0.6
 val CAROUSEL_MINPOW = 0.3
+val DISTANCE_SENSOR_POSITION = 7;
 
 lateinit var R: Robot
 
