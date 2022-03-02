@@ -24,22 +24,22 @@ val ARM_POWER_COMMAND_SLOW = 0.3
 val ARM_POWER_CORRECT = 0.7
 
 //Bucket servo positions
-val BUCKET_LOADING = 0.25
+val BUCKET_LOADING = 0.5
 val BUCKET_TRANSITION_RISING = 0.13
 val BUCKET_TRANSITION_LOWERING = 0.13
-val BUCKET_DUMP = 0.73
+val BUCKET_DUMP = 0.85
 val BUCKET_BALANCED = 0.0
 val BUCKET_TRANSITION_FALLING = 0.07
 
 //Bucket clamp servo positions
 val BUCKET_CLAMP_CLAMPING = 0.02
-val BUCKET_CLAMP_RELEASE = 0.5
+val BUCKET_CLAMP_RELEASE = 0.55
 
 //TSE arm servo positions
-val TSE_RAISED = 0.5
-val TSE_DEPLOY = 0.36
-val TSE_LOWERED = 0.03
-val TSE_INSIDE = 0.75
+val TSE_RAISED = 0.36
+val TSE_DEPLOY = 0.5
+val TSE_LOWERED = 0.85
+val TSE_INSIDE = 0.05
 
 //Carousel motor powers
 val CAROUSEL_MAXPOW = 0.6
@@ -96,7 +96,8 @@ class Robot() {
         outtake_arm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
 
         //Configure, initialize, and disable the TSE arm servo
-        tse.direction = Servo.Direction.REVERSE
+        //tse.direction = Servo.Direction.REVERSE
+        tse.direction = Servo.Direction.FORWARD
         tse.position = TSE_RAISED
         attempt_servo_pwm(tse, false)
 
@@ -165,82 +166,6 @@ class Robot() {
             alive = false
             outtake_commander.release()
         }
-        /*outtake_commander.acquire() //Acquire permission to use the arm
-        try {
-            if (!automation_allowed()) return;
-            OP.log("Arm Position Target", target, -1);
-
-            //Check if things actually need to be done
-            if ((outtake_arm.currentPosition - target).absoluteValue > threshold) {
-                //Reset encoder value if limit switch is currently pressed
-                if (R.outtake_limit_switch.is_touched) {
-                    R.outtake_arm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
-                }
-
-                //Wait for the arm to raech the target position within the desired threshold
-                //Returns true if it succeeded, returns false it if was interrupted by the user,
-                //the predicate function, or emergency controls
-                suspend fun wait_for_arm(): Boolean {
-                    if (!automation_allowed()) return false;
-                    while ((outtake_arm.currentPosition - outtake_arm.targetPosition).absoluteValue > threshold) {
-                        OP.log("Bucket Position", R.outtake_bucket.position, -1);
-                        OP.log("Arm Position Current", R.outtake_arm.currentPosition, -1);
-                        if (OP.stop_event.has_fired() || !predicate() || !automation_allowed()) return false;
-                        yield();
-                    }
-                    return true;
-                }
-
-                val is_rising =
-                    target > ARM_TRANSITION_RISING && outtake_arm.currentPosition <= ARM_TRANSITION_RISING
-                val is_falling =
-                    target < ARM_TRANSITION_LOWERING && outtake_arm.currentPosition >= ARM_TRANSITION_LOWERING
-                //If the target is beyond the transition point, go to the transition point first and transition
-                if (is_rising || is_falling) {
-                    //Tuck bucket in for going down(?)
-                    if (is_falling) {
-                        outtake_bucket.position = BUCKET_TRANSITION_FALLING
-                        delay(delay_ms)
-                    }
-
-                    val transition_arm_target = if (is_rising) { ARM_TRANSITION_RISING } else { ARM_TRANSITION_LOWERING }
-                    val transition_bucket_target = if (is_rising) { BUCKET_TRANSITION_RISING } else { BUCKET_TRANSITION_LOWERING }
-
-                    outtake_arm.targetPosition = transition_arm_target
-                    outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION
-                    outtake_arm.power = command_power
-                    if (!wait_for_arm()) return;
-                    //delay(delay_ms)
-                    if (OP.stop_event.has_fired() || !predicate()) return;
-
-                    outtake_bucket.position = transition_bucket_target
-                    delay(delay_ms)
-                }
-
-                outtake_arm.targetPosition = target
-                outtake_arm.mode = DcMotor.RunMode.RUN_TO_POSITION
-                outtake_arm.power = command_power
-                if (!wait_for_arm()) return;
-                if (OP.stop_event.has_fired() || !predicate()) return;
-
-                //Apply a brief power boost to ensure the arm is where it should be
-                outtake_arm.power = ARM_POWER_CORRECT
-                delay(100)
-                outtake_arm.power = command_power
-            }
-
-            //Set bucket position
-            val real_bucket_position: Double
-
-            outtake_bucket.position = real_bucket_position
-            delay(delay_ms)
-
-            OP.log("Arm Position Target", target, 1000);
-            OP.log("Arm Position Current", outtake_arm.currentPosition, 1000);
-
-        } finally {
-            outtake_commander.release()
-        }*/
     }
 
     /**

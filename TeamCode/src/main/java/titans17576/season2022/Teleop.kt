@@ -93,8 +93,8 @@ class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyn
             R.carousel.power = carousel_power
             if (philip) R.carousel.power += (OP.gamepad1.left_trigger - OP.gamepad1.right_trigger).toDouble() * CAROUSEL_MAXPOW
 
-            if (OP.gamepad2.dpad_up) R.outtake_clamp.position = BUCKET_CLAMP_RELEASE
-            else if (OP.gamepad2.dpad_down) R.outtake_clamp.position = BUCKET_CLAMP_CLAMPING
+            if (OP.gamepad2.dpad_up || OP.gamepad1.dpad_up) R.outtake_clamp.position = BUCKET_CLAMP_RELEASE
+            else if (OP.gamepad2.dpad_down || OP.gamepad1.dpad_down) R.outtake_clamp.position = BUCKET_CLAMP_CLAMPING
         }
     }
 
@@ -116,29 +116,31 @@ class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyn
     suspend fun distance_sensor_subsystem() {
         OP.start_event.await()
         OP.while_live {
-            val DISTANCE = 7
-            if (R.outtake_distance_sensor.getDistance(DistanceUnit.CM) < DISTANCE){
+            val DISTANCE = 8.5
+            if (R.outtake_distance_sensor.getDistance(DistanceUnit.CM) < DISTANCE) {
                 R.outtake_clamp.position = BUCKET_CLAMP_CLAMPING
                 OP.launch {
                     R.intake_commander.acquire()
                     try {
                         R.intake_motor.power = -1.0
-                        delay(600)
+                        delay(650)
                         R.intake_motor.power = 0.0
                     } finally {
                         R.intake_commander.release()
                     }
                 }
 
-                R.tse_commander.acquire()
-                val prev_pos = R.tse.position
-                R.tse.position = TSE_INSIDE
-                val delaydelay: Long = 275
-                delay(delaydelay)
-                R.tse.position = prev_pos
-                delay(delaydelay)
-                R.tse_commander.release()
-                OP.wait_for { OP.gamepad2.right_bumper }
+                OP.launch {
+                    R.tse_commander.acquire()
+                    val prev_pos = R.tse.position
+                    R.tse.position = TSE_INSIDE
+                    val delaydelay: Long = 275
+                    delay(delaydelay)
+                    R.tse.position = prev_pos
+                    delay(delaydelay)
+                    R.tse_commander.release()
+                }
+                OP.wait_for { OP.gamepad2.right_bumper || (philip && OP.gamepad1.right_bumper) }
             }
         }
     }
@@ -149,6 +151,7 @@ class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyn
     suspend fun outtake_arm_subsystem() {
         OP.start_event.await()
 
+        R.outtake_bucket.position = BUCKET_LOADING
         R.reset_outtake()
         R.outtake_arm.targetPosition = 0;
         R.outtake_arm.targetPosition = ARM_LOADING
@@ -160,7 +163,7 @@ class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyn
         fun wants_reset() = OP.gamepad2.right_bumper || (philip && OP.gamepad1.right_bumper)
         fun wants_command_arm_manual() = OP.gamepad2.right_stick_y.absoluteValue > 0.1
         fun wants_dump() = OP.gamepad2.a || (philip && OP.gamepad1.a)
-        fun wants_something() = wants_command_arm() || wants_reset() || wants_command_arm_manual()
+        fun wants_something() = wants_command_arm() || wants_reset() || wants_command_arm_manual() || wants_dump()
 
         OP.while_live {
             var bucket_position: Double? = null
@@ -173,7 +176,8 @@ class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyn
                 try {
                     R.outtake_bucket.position = BUCKET_DUMP
                     R.outtake_clamp.position = BUCKET_CLAMP_RELEASE
-                    OP.wait_for { !wants_dump() }
+                    val stopwatch = Stopwatch()
+                    OP.wait_for { !wants_dump() && stopwatch.ellapsed() > 500 }
                     R.outtake_bucket.position = BUCKET_BALANCED
                     delay(300)
                 } finally {
@@ -183,6 +187,7 @@ class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyn
 
             if (wants_command_arm() && automation_allowed) {
                 var power = ARM_POWER_COMMAND
+                R.outtake_clamp.position = BUCKET_CLAMP_CLAMPING
                 if (OP.gamepad2.x || (philip && OP.gamepad1.x)) {
                     armposition = ARM_LEVEL_1
                     power = ARM_POWER_COMMAND_SLOW
@@ -192,6 +197,8 @@ class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyn
                 R.command_outtake(armposition, bucket_position, command_power = power)
             } else if (wants_reset() && automation_allowed) {
                 armposition = ARM_LOADING
+                R.outtake_bucket.position = BUCKET_LOADING
+                R.outtake_clamp.position = BUCKET_CLAMP_RELEASE
                 R.command_outtake(armposition, bucket_position)
                 R.reset_outtake()
             } else if (wants_command_arm_manual() && automation_allowed) {
@@ -210,6 +217,7 @@ class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyn
     suspend fun tse_arm_subsystem() {
         var tse_pos = TSE_RAISED
         OP.start_event.await()
+        if (philip) return
         OP.while_live {
             R.tse_commander.acquire()
             if (OP.gamepad1.y) {
@@ -219,7 +227,7 @@ class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyn
             } else if (OP.gamepad1.x) {
                 tse_pos = TSE_DEPLOY
             } else if (OP.gamepad1.a) {
-                tse_pos -= 0.0075
+                tse_pos += 0.0075
             }
             R.tse.position = tse_pos
             R.tse_commander.release()
