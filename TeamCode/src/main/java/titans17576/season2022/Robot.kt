@@ -15,7 +15,7 @@ val ARM_TRANSITION_RISING = 475;
 val ARM_TRANSITION_LOWERING = 475;
 val ARM_LEVEL_1: Int = 975;
 val ARM_LEVEL_2: Int = 522;
-val ARM_LEVEL_3: Int = 750;
+val ARM_LEVEL_3: Int = 800;
 val ARM_LEVEL_MAX: Int = 1000;
 //Arm motor powers
 val ARM_POWER_RESET: Double = -0.325;
