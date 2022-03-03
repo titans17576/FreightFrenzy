@@ -116,8 +116,7 @@ class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyn
     suspend fun distance_sensor_subsystem() {
         OP.start_event.await()
         OP.while_live {
-            val DISTANCE = 8.5
-            if (R.outtake_distance_sensor.getDistance(DistanceUnit.CM) < DISTANCE) {
+            if (R.outtake_distance_sensor.getDistance(DistanceUnit.CM) < DISTANCE_SENSOR_POSITION){
                 R.outtake_clamp.position = BUCKET_CLAMP_CLAMPING
                 OP.launch {
                     R.intake_commander.acquire()

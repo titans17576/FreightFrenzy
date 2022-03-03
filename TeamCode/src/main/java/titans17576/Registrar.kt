@@ -20,6 +20,8 @@ fun freight_frenzy_regionals(){
     register_defered_async_opmode("/17576/R/Teleop/Logging", false) { op -> titans17576.season2022.Teleop(false, true) }
     register_defered_async_opmode("/17576/R/Teleop/Philip", false) { op -> titans17576.season2022.Teleop(true, false) }
     register_defered_async_opmode("/17576/R/Red/Barcode-Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.BarcodeCarouselDepot(true)}
+    register_defered_async_opmode("/17576/R/Red/Barcode-Warehouse-Twice-Park", true) {op -> titans17576.freightfrenzy.Regionals.BarcodeWarehouseTwicePark(true)}
+    register_defered_async_opmode("/17576/R/Red/Barcode-Warehouse-Twice-Park", true) {op -> titans17576.freightfrenzy.Regionals.BarcodeWarehouseTwicePark(false)}
     register_defered_async_opmode("/17576/R/Blue/Barcode-Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.BarcodeCarouselDepot(false)}
     register_defered_async_opmode("/17576/R/Red/Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.CarouselDepot(true)}
     register_defered_async_opmode("/17576/R/Blue/Carousel-Park", true) {op -> titans17576.freightfrenzy.Regionals.CarouselDepot(false)}
