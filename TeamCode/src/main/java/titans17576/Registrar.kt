@@ -42,4 +42,5 @@ fun ftcrc7573_tests() {
 }
 
 fun op_modes_other() {
+    register_defered_async_opmode("/7573/ArmPIDTest", false) { titans17576.season2022.ArmPIDAdjuster() }
 }

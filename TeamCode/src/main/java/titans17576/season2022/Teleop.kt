@@ -21,7 +21,7 @@ import kotlin.concurrent.thread
 import kotlin.coroutines.suspendCoroutine
 
 
-class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyncOpMode {
+open class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyncOpMode {
     val R = Robot()
 
     /**
@@ -56,10 +56,14 @@ class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyn
             val slow = if (OP.gamepad1.left_bumper || OP.gamepad2.left_bumper) 0.3 else 1.0
 
             //POV drive (not tank)
-            R.left_back.power = (drive + turn - strafe) * slow
-            R.left_front.power = (drive + turn + strafe) * slow
-            R.right_back.power = (drive - turn + strafe) * slow
-            R.right_front.power = (drive - turn - strafe) * slow
+            val left_back_comp = (drive + turn - strafe)
+            R.left_back.power = left_back_comp * left_back_comp * Math.signum(left_back_comp) * slow
+            val left_front_comp = (drive + turn + strafe)
+            R.left_front.power = left_front_comp * left_front_comp * Math.signum(left_front_comp) * slow
+            val right_back_comp = (drive - turn + strafe)
+            R.right_back.power = right_back_comp * right_back_comp * Math.signum(right_back_comp) * slow
+            val right_front_comp = (drive - turn - strafe)
+            R.right_front.power = right_front_comp * right_front_comp * Math.signum(right_front_comp) * slow
         }
     }
 

@@ -96,6 +96,7 @@ class Robot() {
         //Configure and reset the outtake motor
         outtake_arm.direction = DcMotorSimple.Direction.REVERSE
         outtake_arm.mode = DcMotor.RunMode.STOP_AND_RESET_ENCODER
+        outtake_arm.setPositionPIDFCoefficients(8.5)
 
         //Configure, initialize, and disable the TSE arm servo
         //tse.direction = Servo.Direction.REVERSE
