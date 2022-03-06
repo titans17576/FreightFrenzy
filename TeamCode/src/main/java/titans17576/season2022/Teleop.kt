@@ -139,6 +139,8 @@ class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyn
                     delay(delaydelay)
                     R.tse_commander.release()
                 }
+
+                OP.telemetry.speak("Mineral");
                 OP.wait_for { OP.gamepad2.right_bumper || (philip && OP.gamepad1.right_bumper) }
             }
         }
@@ -156,6 +158,7 @@ class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyn
         R.outtake_arm.targetPosition = ARM_LOADING
 
         var armposition = 0
+        var bucket_dump_pos = BUCKET_DUMP
 
         fun wants_command_arm() = OP.gamepad2.b || OP.gamepad2.y || OP.gamepad2.x
                 || (philip && (OP.gamepad1.b || OP.gamepad1.y || OP.gamepad1.x))
@@ -165,8 +168,6 @@ class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyn
         fun wants_something() = wants_command_arm() || wants_reset() || wants_command_arm_manual() || wants_dump()
 
         OP.while_live {
-            var bucket_position: Double? = null
-
             val automation_allowed = R.automation_allowed()
             OP.wait_for { wants_something() }
 
@@ -177,7 +178,7 @@ class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyn
                     R.outtake_clamp.position = BUCKET_CLAMP_RELEASE
                     val stopwatch = Stopwatch()
                     OP.wait_for { !wants_dump() && stopwatch.ellapsed() > 500 }
-                    R.outtake_bucket.position = BUCKET_BALANCED
+                    //R.outtake_bucket.position = BUCKET_BALANCED
                     delay(300)
                 } finally {
                     R.outtake_commander.release()
@@ -190,22 +191,30 @@ class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : DeferredAsyn
                 if (OP.gamepad2.x || (philip && OP.gamepad1.x)) {
                     armposition = ARM_LEVEL_1
                     power = ARM_POWER_COMMAND_SLOW
+                    bucket_dump_pos = BUCKET_BALANCED
                 }
-                if (OP.gamepad2.y || (philip && OP.gamepad1.y)) armposition = ARM_LEVEL_2
-                if (OP.gamepad2.b || (philip && OP.gamepad1.b)) armposition = ARM_LEVEL_3
-                R.command_outtake(armposition, bucket_position, command_power = power)
+                if (OP.gamepad2.y || (philip && OP.gamepad1.y)) {
+                    armposition = ARM_LEVEL_2
+                    bucket_dump_pos = BUCKET_DUMP_MORE
+                }
+                if (OP.gamepad2.b || (philip && OP.gamepad1.b)) {
+                    armposition = ARM_LEVEL_3
+                    bucket_dump_pos = BUCKET_DUMP
+                }
+                R.command_outtake(armposition, bucket_dump_pos, command_power = power)
             } else if (wants_reset() && automation_allowed) {
                 armposition = ARM_LOADING
                 R.outtake_bucket.position = BUCKET_LOADING
                 R.outtake_clamp.position = BUCKET_CLAMP_RELEASE
-                R.command_outtake(armposition, bucket_position)
+                delay(350)
+                R.command_outtake(armposition)
                 R.reset_outtake()
             } else if (wants_command_arm_manual() && automation_allowed) {
                 armposition -= (OP.gamepad2.right_stick_y * 100).toInt()
                 if (armposition < 0) armposition = 0;
                 /*if (R.outtake_arm.currentPosition > ARM_LEVEL_MAX) armposition = ARM_LEVEL_MAX
                 else if (R.outtake_arm.currentPosition < ARM_LOADING) armposition = ARM_LOADING*/
-                R.command_outtake(armposition, bucket_position, delay_ms = 0)
+                R.command_outtake(armposition, delay_ms = 0)
             }
         }
     }
