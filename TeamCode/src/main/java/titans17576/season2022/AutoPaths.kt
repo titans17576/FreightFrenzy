@@ -161,8 +161,8 @@ class Barcode_Warehouse_Park(val is_red: Boolean, val factory: TrajectoryBuilder
 
 class Barcode_Warehouse_Twice_Park(is_red: Boolean, factory: TrajectoryBuilderFactory)
     : PathBuilder7573(Pose2d(
-    if (is_red) -28.0 else -40.0,
-    -63.0 * side(is_red),
+    if (is_red) { 6.0 } else { 6.0 },
+    -63.0 * (if (is_red) 1.0 else -1.0),
     90.0.toRadians * (if (is_red) 1.0 else -1.0)
 ), factory) {
     val side = side(is_red)
@@ -180,16 +180,16 @@ class Barcode_Warehouse_Twice_Park(is_red: Boolean, factory: TrajectoryBuilderFa
 
         var counter = 0;
 
-        while(counter < 3){
+        while(counter < 2){
             trajectories.add(
                 new_movement()
                     .spline_to_warehouse(is_red)
-                    .back(40.0)
                     .build()
             )
 
             trajectories.add(
                 new_movement()
+                    .back(40.0)
                     .spline_to_shipping_hub(is_red)
                     .build()
             )

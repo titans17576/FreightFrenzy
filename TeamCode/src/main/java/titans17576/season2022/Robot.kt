@@ -9,44 +9,6 @@ import titans17576.ftcrc7573.OP
 import titans17576.ftcrc7573.TouchSensor7573
 import kotlin.math.absoluteValue
 
-//Arm positions in encoder ticks
-val ARM_LOADING: Int = 0;
-val ARM_TRANSITION_RISING = 475;
-val ARM_TRANSITION_LOWERING = 475;
-val ARM_LEVEL_1: Int = 975;
-val ARM_LEVEL_2: Int = 522;
-val ARM_LEVEL_3: Int = 800;
-val ARM_LEVEL_MAX: Int = 1000;
-//Arm motor powers
-val ARM_POWER_RESET: Double = -0.325;
-val ARM_POWER_COMMAND = 0.7
-val ARM_POWER_COMMAND_SLOW = 0.3
-val ARM_POWER_CORRECT = 0.7
-
-//Bucket servo positions
-val BUCKET_LOADING = 0.5
-val BUCKET_TRANSITION_RISING = 0.13
-val BUCKET_TRANSITION_LOWERING = 0.13
-val BUCKET_DUMP = 0.85
-val BUCKET_DUMP_MORE = 1.0
-val BUCKET_BALANCED = 0.0
-val BUCKET_TRANSITION_FALLING = 0.07
-
-//Bucket clamp servo positions
-val BUCKET_CLAMP_CLAMPING = 0.02
-val BUCKET_CLAMP_RELEASE = 0.55
-
-//TSE arm servo positions
-val TSE_RAISED = 0.36
-val TSE_DEPLOY = 0.5
-val TSE_LOWERED = 0.85
-val TSE_INSIDE = 0.05
-
-//Carousel motor powers
-val CAROUSEL_MAXPOW = 0.6
-val CAROUSEL_MINPOW = 0.3
-val DISTANCE_SENSOR_POSITION = 8.5;
-
 lateinit var R: Robot
 
 class Robot() {
@@ -58,6 +20,7 @@ class Robot() {
 
     //Intake peripherals
     val intake_motor = OP.hardwareMap.get("intake") as DcMotorEx
+    val intake_drawer = OP.hardwareMap.get("intake_drawer") as Servo
     //Intake usage control
     val intake_commander = Semaphore(1)
 
@@ -145,7 +108,8 @@ class Robot() {
             val real_bucket_position: Double
             if (bucket_position == null) {
                 if (target < ARM_TRANSITION_RISING) real_bucket_position = BUCKET_LOADING
-                else real_bucket_position = BUCKET_DUMP
+                else if (target < ARM_TRANSITION_EXTENDED) real_bucket_position = BUCKET_DUMP
+                else real_bucket_position = BUCKET_BALANCED
             } else {
                 real_bucket_position = bucket_position
             }

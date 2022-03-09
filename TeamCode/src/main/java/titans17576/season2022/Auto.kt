@@ -1,7 +1,6 @@
 package titans17576.freightfrenzy.Regionals
 
 import com.qualcomm.robotcore.hardware.DcMotor
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.delay
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit
@@ -102,17 +101,22 @@ abstract class AutoBase : DeferredAsyncOpMode {
  * Deposit freight with a given arm level, and optionally crawl forward a distance
  * to approach the team hub
  */
-suspend fun deposit_freight(level: Int, distance: Double?, drive: RegionalsDrive) {
-    if (distance != null) follow_trajectory_sequence(drive.trajectorySequenceBuilder(drive.poseEstimate).back(distance).build(), drive, OP)
+suspend fun deposit_freight(level: Int, prearm_distance: Double?, postarm_distance: Double?, drive: RegionalsDrive) {
+    if (prearm_distance != null) follow_trajectory_sequence(drive.trajectorySequenceBuilder(drive.poseEstimate).back(prearm_distance).build(), drive, OP)
 
     //Allow a maxinum amount of 4 seconds incase the arm dies on the way
     val emergency_stop_one = Stopwatch()
     R.command_outtake(level, null) { emergency_stop_one.ellapsed() < 4000 };
     delay(200)
 
+    if (postarm_distance != null) follow_trajectory_sequence(drive.trajectorySequenceBuilder(drive.poseEstimate).back(postarm_distance).build(), drive, OP)
+
     //Dump the bucket
-    R.outtake_bucket.position = BUCKET_DUMP
+    //R.outtake_bucket.position = BUCKET_DUMP
+    R.outtake_clamp.position = BUCKET_CLAMP_RELEASE
     delay(600)
+
+    if (postarm_distance != null) follow_trajectory_sequence(drive.trajectorySequenceBuilder(drive.poseEstimate).forward(postarm_distance).build(), drive, OP)
 
     //Reset the bucket as the arm retracts
     val emergency_stop = Stopwatch()
@@ -127,12 +131,12 @@ suspend fun deposit_freight(level: Int, distance: Double?, drive: RegionalsDrive
     //it isn't straining til the end of time
     R.attempt_servo_pwm(R.outtake_bucket, false)
 
-    if (distance != null) follow_trajectory_sequence(drive.trajectorySequenceBuilder(drive.poseEstimate).forward(distance).build(), drive, OP)
+    if (prearm_distance != null) follow_trajectory_sequence(drive.trajectorySequenceBuilder(drive.poseEstimate).forward(prearm_distance).build(), drive, OP)
 }
 
-suspend fun deposit_level_3(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_3, 1.0, drive) }
-suspend fun deposit_level_2(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_2, 6.0, drive) }
-suspend fun deposit_level_1(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_2, 1.5, drive) }
+suspend fun deposit_level_3(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_3, 6.0, null, drive) }
+suspend fun deposit_level_2(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_2, -6.0, 4.0, drive) }
+suspend fun deposit_level_1(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_3, 1.5, null, drive) }
 suspend fun deposit_correct_level(barcode: Barcode, drive: RegionalsDrive) {
     when (barcode) {
         Barcode.Left -> deposit_level_1(drive)
@@ -145,7 +149,7 @@ suspend fun intake_elements(drive: RegionalsDrive){
     OP.while_live {
         R.intake_motor.power = 1.0
 
-        if(R.outtake_distance_sensor.getDistance(DistanceUnit.CM) < DISTANCE_SENSOR_POSITION){
+        if(R.outtake_distance_sensor.getDistance(DistanceUnit.CM) < DISTANCE_SENSOR_ACTIVATION_UPPER){
             R.outtake_clamp.position = BUCKET_CLAMP_CLAMPING;
             R.intake_motor.power = 0.0
             it();
@@ -269,7 +273,7 @@ class BarcodeWarehouseTwicePark(val is_red: Boolean) : AutoBase() {
         deposit_correct_level(barcode.await(), bot)
 
         //Goes to the warehouse, and then goes to deposit level 3
-        for (i in 1..3){
+        for (i in 1..2){
             follow_trajectory_sequence(path.trajectories.poll()!!, bot, OP);
             intake_elements(bot);
 

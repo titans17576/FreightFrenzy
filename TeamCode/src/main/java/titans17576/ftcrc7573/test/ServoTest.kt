@@ -9,7 +9,7 @@ import titans17576.ftcrc7573.TouchSensor7573
 
 class ServoTest(op: AsyncOpMode) : DeferredAsyncOpMode {
     val op = op
-    var servoright: Servo? = op.hardwareMap["tse"] as Servo
+    var servoright: Servo? = op.hardwareMap["intake_drawer"] as Servo
     var servoname = ""
     //val servoleft = op.hardwareMap["outtake_left"] as Servo
     var position = 0.0
@@ -24,7 +24,7 @@ class ServoTest(op: AsyncOpMode) : DeferredAsyncOpMode {
         op.while_live {
             if (op.gamepad1.dpad_up) position += 0.01
             if (op.gamepad1.dpad_down) position -= 0.01
-            position = op.gamepad1.right_trigger.toDouble()
+            //position = op.gamepad1.right_trigger.toDouble()
             //if (op.gamepad2.dpad_up) position2 += 0.01
             //if (op.gamepad2.dpad_down) position2 -= 0.01
             servoright!!.position = position
@@ -34,7 +34,6 @@ class ServoTest(op: AsyncOpMode) : DeferredAsyncOpMode {
             op.log("Servo Name", servoname);
             //op.log("Servo Direction Left: ", servoleft.direction)
             //op.log("Servo Value Left: ", position)
-            op.telemetry.update()
             delay(100)
         }
         //Midd position = 0.4
