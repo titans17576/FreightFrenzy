@@ -102,6 +102,8 @@ abstract class AutoBase : DeferredAsyncOpMode {
  * to approach the team hub
  */
 suspend fun deposit_freight(level: Int, prearm_distance: Double?, postarm_distance: Double?, drive: RegionalsDrive) {
+    R.intake_drawer.position = INTAKE_DRAWER_IN
+
     if (prearm_distance != null) follow_trajectory_sequence(drive.trajectorySequenceBuilder(drive.poseEstimate).back(prearm_distance).build(), drive, OP)
 
     //Allow a maxinum amount of 4 seconds incase the arm dies on the way
@@ -134,9 +136,9 @@ suspend fun deposit_freight(level: Int, prearm_distance: Double?, postarm_distan
     if (prearm_distance != null) follow_trajectory_sequence(drive.trajectorySequenceBuilder(drive.poseEstimate).forward(prearm_distance).build(), drive, OP)
 }
 
-suspend fun deposit_level_3(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_3, 6.0, null, drive) }
-suspend fun deposit_level_2(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_2, -6.0, 4.0, drive) }
-suspend fun deposit_level_1(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_3, 1.5, null, drive) }
+suspend fun deposit_level_3(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_3, null, null, drive) }
+suspend fun deposit_level_2(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_2, -15.0, 4.0, drive) }
+suspend fun deposit_level_1(drive: RegionalsDrive) { deposit_freight(ARM_LEVEL_3, -4.0, null, drive) }
 suspend fun deposit_correct_level(barcode: Barcode, drive: RegionalsDrive) {
     when (barcode) {
         Barcode.Left -> deposit_level_1(drive)
@@ -144,12 +146,19 @@ suspend fun deposit_correct_level(barcode: Barcode, drive: RegionalsDrive) {
         Barcode.Right -> deposit_level_3(drive)
     }
 }
-suspend fun intake_elements(drive: RegionalsDrive){
+suspend fun intake_elements(drive: RegionalsDrive) {
     R.outtake_clamp.position = BUCKET_CLAMP_RELEASE;
+    R.intake_drawer.position = INTAKE_DRAWER_OUT
     OP.while_live {
         R.intake_motor.power = 1.0
 
-        if(R.outtake_distance_sensor.getDistance(DistanceUnit.CM) < DISTANCE_SENSOR_ACTIVATION_UPPER){
+        val wiggle = drive.trajectorySequenceBuilder(drive.poseEstimate)
+            .turn(-5.0.toRadians)
+            .turn( 5.0.toRadians)
+            .build()
+        follow_trajectory_sequence(wiggle, drive, OP)
+
+        if(R.outtake_distance_sensor.getDistance(DistanceUnit.CM) < DISTANCE_SENSOR_ACTIVATION_UPPER) {
             R.outtake_clamp.position = BUCKET_CLAMP_CLAMPING;
             R.intake_motor.power = 0.0
             it();

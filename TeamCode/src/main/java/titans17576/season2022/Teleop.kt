@@ -139,7 +139,7 @@ open class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : Deferre
                 R.outtake_clamp.position = BUCKET_CLAMP_CLAMPING
 
                 //Launch to not delay this function
-                OP.launch {
+                /*OP.launch {
                     R.intake_commander.acquire()
                     try {
                         //Eject any excess freight
@@ -149,7 +149,7 @@ open class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : Deferre
                     } finally {
                         R.intake_commander.release()
                     }
-                }
+                }*/
 
                 OP.launch {
                     //Wiggle the TSE to notify of a freight
@@ -214,11 +214,12 @@ open class Teleop(val philip: Boolean, val dashboard_logging: Boolean) : Deferre
             if (wants_dump() && can_dump()) {
                 R.outtake_commander.acquire()
                 try {
-                    R.outtake_bucket.position = BUCKET_DUMP
+                    //R.outtake_bucket.position = bucket_
                     R.outtake_clamp.position = BUCKET_CLAMP_RELEASE
                     val stopwatch = Stopwatch()
                     OP.wait_for { !wants_dump() && stopwatch.ellapsed() > 500 }
                     //R.outtake_bucket.position = BUCKET_BALANCED
+                    R.outtake_clamp.position = BUCKET_CLAMP_CLAMPING
                     delay(300)
                 } finally {
                     R.outtake_commander.release()

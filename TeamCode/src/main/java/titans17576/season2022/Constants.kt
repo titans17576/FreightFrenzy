@@ -3,7 +3,8 @@ package titans17576.season2022
 //Arm positions in encoder ticks
 val ARM_LOADING: Int = 0;
 val ARM_TRANSITION_RISING = 475;
-val ARM_LEVEL_3: Int = 728;
+val ARM_LEVEL_3: Int = 718;
+val ARM_LEVEL_3_MARK: Int = 728;
 val ARM_LEVEL_2: Int = 975;
 val ARM_TRANSITION_EXTENDED = 1100;
 val ARM_LEVEL_1: Int = 1230;
@@ -27,14 +28,14 @@ val INTAKE_DRAWER_IN = 0.03
 val BUCKET_LOADING = 0.4
 val BUCKET_TRANSITION_RISING = 0.13
 val BUCKET_TRANSITION_LOWERING = 0.13
-val BUCKET_DUMP = 0.85
+val BUCKET_DUMP = 0.80
 val BUCKET_DUMP_MORE = 1.0
 val BUCKET_BALANCED = 0.0
 val BUCKET_TRANSITION_FALLING = 0.07
 
 //Bucket clamp servo positions
 val BUCKET_CLAMP_CLAMPING = 0.02
-val BUCKET_CLAMP_RELEASE = 0.55
+val BUCKET_CLAMP_RELEASE = 0.35
 
 //TSE arm servo positions
 val TSE_RAISED = 0.36

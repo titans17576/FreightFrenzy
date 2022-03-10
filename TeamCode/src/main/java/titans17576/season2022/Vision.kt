@@ -66,10 +66,10 @@ class TeamShippingElementPipeline(barcode: FeedSource<Barcode>, op: AsyncOpMode)
         //extract the red channel from input
         //Core.extractChannel(input, red, 0)
         //converting rbg to hsv
-        Imgproc.cvtColor(input, hsv, Imgproc.COLOR_RGB2HSV)
+        Imgproc.cvtColor(input, hsv, Imgproc.COLOR_BGR2HSV)
 
         //tuned to taped green construction paper reflecting strong lights
-        Core.inRange(hsv, Scalar(60.0,50.0,20.0), Scalar(90.0,255.0,255.0), dst)
+        Core.inRange(hsv, Scalar(55.75,100.0,75.0), Scalar(100.0,255.0,255.0), dst)
 
         //finding the contours. p1 = img, p2 = contour retrieval mode, p3 = contour approx method
         val contours:List<MatOfPoint> = java.util.ArrayList()

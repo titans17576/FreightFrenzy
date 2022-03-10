@@ -171,7 +171,7 @@ class Barcode_Warehouse_Twice_Park(is_red: Boolean, factory: TrajectoryBuilderFa
         trajectories.add(
             new_movement()
                 .setReversed(false)
-                .forward(11.0)
+                .forward(5.0)
                 .turn(180.0.toRadians)
                 .setReversed(true)
                 .spline_to_shipping_hub(is_red)
@@ -190,6 +190,10 @@ class Barcode_Warehouse_Twice_Park(is_red: Boolean, factory: TrajectoryBuilderFa
             trajectories.add(
                 new_movement()
                     .back(40.0)
+                    .waitSeconds(0.5)
+                    .setReversed(true)
+                    .splineToLinearHeading(Pose2d(9.0, -65.0 * side), 0.0 * side)
+                    .setReversed(true)
                     .spline_to_shipping_hub(is_red)
                     .build()
             )
